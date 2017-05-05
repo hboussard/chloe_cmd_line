@@ -1,4 +1,4 @@
-package fr.inra.sad.bagap.chloe4qgis;
+package fr.inra.sad.bagap.chloe_cmd_line;
 
 import java.util.StringTokenizer;
 
