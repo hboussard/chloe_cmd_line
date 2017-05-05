@@ -95,7 +95,7 @@ public class Model {
 		WindowShapeType myShape = Util.getShape(shape);
 		int myDelta = Util.getInteger(delta);
 		boolean myInterpolate = Util.getBoolean(interpolate);
-		double myMinRate = Util.getDouble(minRate);
+		double myMinRate = 100 - Util.getDouble(minRate);
 		Set<Integer> myFilters = Util.getSetInteger(filters);
 		Set<Integer> myUnfilters = Util.getSetInteger(filters);
 		Friction myFriction = Util.getFriction(friction);
