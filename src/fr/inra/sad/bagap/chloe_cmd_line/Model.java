@@ -6,13 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import com.csvreader.CsvWriter;
-import fr.inra.sad_paysage.apiland.core.space.impl.raster.matrix.Friction;
-import fr.inra.sad_paysage.apiland.core.space.impl.raster.matrix.Matrix;
-import fr.inra.sad_paysage.apiland.treatment.Treatment;
-import fr.inra.sad_paysage.apiland.treatment.TreatmentException;
-import fr.inra.sad_paysage.apiland.treatment.window.MapWindowMatrixTreatment;
-import fr.inra.sad_paysage.apiland.treatment.window.SlidingWindowMatrixTreatment;
-import fr.inra.sad_paysage.apiland.window.shape.WindowShapeType;
+
+import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.WindowShapeType;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Friction;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Matrix;
+import fr.inra.sad.bagap.apiland.treatment.Treatment;
+import fr.inra.sad.bagap.apiland.treatment.TreatmentException;
+import fr.inra.sad.bagap.apiland.treatment.window.MapWindowMatrixTreatment;
+import fr.inra.sad.bagap.apiland.treatment.window.SlidingWindowMatrixTreatment;
 
 public class Model {
 

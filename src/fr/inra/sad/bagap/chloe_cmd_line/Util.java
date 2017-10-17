@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import fr.inra.sad_paysage.apiland.core.space.impl.raster.matrix.Friction;
-import fr.inra.sad_paysage.apiland.core.space.impl.raster.matrix.JaiMatrixFactory;
-import fr.inra.sad_paysage.apiland.core.space.impl.raster.matrix.Matrix;
-import fr.inra.sad_paysage.apiland.window.shape.WindowShapeType;
+import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.WindowShapeType;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Friction;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.JaiMatrixFactory;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Matrix;
 
 public class Util {
 
