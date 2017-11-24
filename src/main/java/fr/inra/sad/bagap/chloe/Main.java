@@ -96,7 +96,7 @@ public class Main {
 	}
 	
 	private static void launchFromCsv(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchFromCsv()");
+		System.out.println("##chloe - appel de la fonction 'exportAsciiGridFromCsv()'");
 		try {
 			String inputCsv = importInputCsv(properties);
 			Set<String> variables = importVariables(properties);
@@ -107,92 +107,98 @@ public class Main {
 			double cellsize = importCellSize(properties);
 			int nodatavalue = importNoDataValue(properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			
-			model.exportMapFromCsv(inputCsv, folder, variables, ncols, nrows, xllcorner, yllcorner, cellsize, nodatavalue, viewAscii);
+			model.exportAsciiGridFromCsv(true, inputCsv, folder, outputName, variables, ncols, nrows, xllcorner, yllcorner, cellsize, nodatavalue, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchFromShapefile(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchFromShapefile()");
+		System.out.println("##chloe - appel de la fonction 'exportAsciiGridFromShapefile()'");
 		try {
 			Set<String> layers = importInputShapefile(properties);
 			String attribute = importAttribute(properties);
 			String lookupTable = importLookupTable(properties);
 			Set<Double> cellsizes = importCellSizes(properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			Double minx = importMinX(properties);
 			Double maxx = importMaxX(properties);
 			Double miny = importMinY(properties);
 			Double maxy = importMaxY(properties);
 			
-			model.exportAsciiGridFromShapefile(layers, attribute, lookupTable, cellsizes, folder, viewAscii, minx, maxx, miny, maxy);
+			model.exportAsciiGridFromShapefile(true, layers, attribute, lookupTable, cellsizes, folder, outputName, viewAscii, minx, maxx, miny, maxy);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchSearchAndReplace(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchSearchAndReplace()");
+		System.out.println("##chloe - appel de la fonction 'runSearchAndReplace()'");
 		try {
 			Set<String> asciis = importInputAscii(properties);
 			int nodatavalue = importNoDataValue(properties);
 			Map<Integer, Number> changes = importChanges(properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			
-			model.runSearchAndReplace(asciis, nodatavalue, changes, folder, viewAscii);
+			model.runSearchAndReplace(true, asciis, nodatavalue, changes, folder, outputName, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchOverlay(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchOverlay()");
+		System.out.println("##chloe - appel de la fonction 'runOverlay()'");
 		try {
 			List<Matrix> matrix = importOverlayingMatrix(model, properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			
-			model.runOverlay(matrix, folder, viewAscii);
+			model.runOverlay(true, matrix, folder, outputName, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchDistance(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchDistance()");
+		System.out.println("##chloe - appel de la fonction 'runDistance()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			Set<Integer> distances = importDistances(properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			
-			model.runDistance(matrix, distances, folder, viewAscii);
+			model.runDistance(true, matrix, distances, folder, outputName, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchClassification(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchClassification()");
+		System.out.println("##chloe - appel de la fonction 'runClassification()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			Map<Domain<Double, Double>, Integer> domains = importDomains(properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			
-			model.runClassification(matrix, domains, folder, viewAscii);
+			model.runClassification(true, matrix, domains, folder, outputName, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchCluster(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchCluster()");
+		System.out.println("##chloe - appel de la fonction 'runCluster()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			Set<Integer> clusters = importCluster(properties);
@@ -201,62 +207,65 @@ public class Main {
 			Friction friction = importClusterFriction(properties);
 			Matrix frictionMatrix =  importClusterFrictionMatrix(model, properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			
-			model.runCluster(matrix, clusters, typeCluster, distance, friction, frictionMatrix, folder, viewAscii);
+			model.runCluster(true, matrix, clusters, typeCluster, distance, friction, frictionMatrix, folder, outputName, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchFilter(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchFilter()");
+		System.out.println("##chloe - appel de la fonction 'runFilter()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			Matrix filterMatrix = importFilterAscii(model, properties);
 			Set<Integer> filterValues = importFilterValues(properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			
-			model.runFilter(matrix, filterMatrix, filterValues, folder, viewAscii);
+			model.runFilter(true, matrix, filterMatrix, filterValues, folder, outputName, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchMap(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchMap()");
+		System.out.println("##chloe - appel de la fonction 'runMapWindow()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			Set<String> metrics = importMetrics(properties);
 			String csvOutput = importCsvOutput(properties);
 			
-			model.runMapWindow(matrix, metrics, csvOutput);
+			model.runMapWindow(true, matrix, metrics, csvOutput);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchGrid(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchGrid()");
+		System.out.println("##chloe - appel de la fonction 'runGridWindow()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			List<Integer> gridSizes = importGridSizes(properties);
 			double minRate = importMaximumNoValueRate(properties);
 			Set<String> metrics = importMetrics(properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			boolean exportCsv = importExportCsv(properties);
 			boolean exportAscii = importExportAscii(properties);
 			
-			model.runGridWindow(matrix, gridSizes, minRate, metrics, folder, viewAscii, exportCsv, exportAscii);
+			model.runGridWindow(true, matrix, gridSizes, minRate, metrics, folder, outputName, viewAscii, exportCsv, exportAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchSliding(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchSliding()");
+		System.out.println("##chloe - appel de la fonction 'runSlidingWindow()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			WindowShapeType shape = importShape(properties);
@@ -268,20 +277,21 @@ public class Main {
 			boolean interpolate = importInterpolation(properties);
 			Set<String> metrics = importMetrics(properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			boolean exportCsv = importExportCsv(properties);
 			boolean exportAscii = importExportAscii(properties);
 			Set<Integer> filters = importFilters(properties);
 			Set<Integer> unfilters = importUnfilters(properties);
 			
-			model.runSlidingWindow(matrix, shape, friction, frictionMatrix, windowSizes, delta, interpolate, minRate, metrics, folder, viewAscii, exportCsv, exportAscii, filters, unfilters);
+			model.runSlidingWindow(true, matrix, shape, friction, frictionMatrix, windowSizes, delta, interpolate, minRate, metrics, folder, outputName, viewAscii, exportCsv, exportAscii, filters, unfilters);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchSelected(Model model, Properties properties) {
-		System.out.println("appel de la fonction launchSelected()");
+		System.out.println("##chloe - appel de la fonction 'runSelectedWindow()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			WindowShapeType shape = importShape(properties);
@@ -292,11 +302,12 @@ public class Main {
 			Set<Pixel> pixels = importPixels(matrix, properties);
 			Set<String> metrics = importMetrics(properties);
 			String folder = importOutputFolder(properties);
+			String outputName = importOutputName(properties);
 			boolean viewAscii = importVisualizeAscii(properties);
 			boolean exportCsv = importExportCsv(properties);
 			boolean exportAscii = importExportAscii(properties);
 			
-			model.runSelectedWindow(matrix, minRate, shape, friction, frictionMatrix, windowSizes, pixels, metrics, folder, viewAscii, exportCsv, exportAscii);
+			model.runSelectedWindow(true, matrix, minRate, shape, friction, frictionMatrix, windowSizes, pixels, metrics, folder, outputName, viewAscii, exportCsv, exportAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
@@ -380,6 +391,14 @@ public class Main {
 			return properties.getProperty("output_folder")+"/";
 		}
 		throw new NoParameterException("output_folder");
+	}
+	
+	// required 
+	public static String importOutputName(Properties properties) throws NoParameterException {
+		if(properties.containsKey("output_name")){
+			return properties.getProperty("output_name");
+		}
+		throw new NoParameterException("output_name");
 	}
 	
 	// required

@@ -1747,10 +1747,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bCsvApply.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//System.out.println(inputCsv+" "+);
 				String name = (String) tLMap.getModel().getValueAt(tLMap.getSelectedRow(),0);
 				try{
-					CsvReader cr = new CsvReader(inputCsv);
+					CsvReader cr = new CsvReader(mapCsv);
 					cr.setDelimiter(';');
 					cr.readHeaders();
 					
@@ -2687,7 +2686,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 			Vector<Integer> vi;
 			for(String w : ws){
 				vi = new Vector<Integer>();
-				vi.add(new Integer(w));
+				vi.add(Integer.parseInt(w));
 				((DefaultTableModel) tSize.getModel()).addRow(vi);
 			}
 		}
@@ -2704,7 +2703,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 			Vector<Double> vi;
 			for(String w : ws){
 				vi = new Vector<Double>();
-				vi.add(new Double(w));
+				vi.add(Double.parseDouble(w));
 				((DefaultTableModel) tCellsize.getModel()).addRow(vi);
 			}
 		}
@@ -3123,7 +3122,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	public void importClusterDistance(Properties properties){
 		if(properties.containsKey("cluster_distance")){
-			String prop = properties.getProperty("cluster_type");
+			String prop = properties.getProperty("cluster_distance");
 			spEuclidianDistanceCluster.setValue(Double.parseDouble(prop));
 			spFunctionalDistanceCluster.setValue(Double.parseDouble(prop));
 		}
@@ -3131,14 +3130,14 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	public void importClusterFriction(Properties properties){
 		if(properties.containsKey("cluster_friction")){
-			String prop = properties.getProperty("cluster_type");
+			String prop = properties.getProperty("cluster_friction");
 			taFrictionCluster.setText(prop);
 		}
 	}
 	
 	public void importClusterFrictionMatrix(Properties properties){
 		if(properties.containsKey("cluster_friction_ascii")){
-			String prop = properties.getProperty("cluster_type_ascii");
+			String prop = properties.getProperty("cluster_friction_ascii");
 			taFrictionCluster.setText(prop);
 			getController().importAsciiGridFriction(this, clusterFrictionMatrix, prop);
 		}

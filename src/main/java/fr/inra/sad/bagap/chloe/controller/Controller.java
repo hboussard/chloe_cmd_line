@@ -71,8 +71,8 @@ public class Controller {
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
 				
-				return model.runSlidingWindow(inputMatrix, shape, friction, frictionMatrix,
-						windowSizes, delta, interpolate, minRate, metrics, outputFolder, viewAsciiOutput, exportCsv, exportAscii,
+				return model.runSlidingWindow(false, inputMatrix, shape, friction, frictionMatrix,
+						windowSizes, delta, interpolate, minRate, metrics, outputFolder, null, viewAsciiOutput, exportCsv, exportAscii,
 						filters, unfilters);
 			}
 			@Override
@@ -93,8 +93,8 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runSelectedWindow(inputMatrix, minRate, shape, friction, frictionMatrix, 
-						windowSizes, pixels, metrics, asciiOutput, viewAsciiOutput, exportCsv, exportAscii);	
+				return model.runSelectedWindow(false, inputMatrix, minRate, shape, friction, frictionMatrix, 
+						windowSizes, pixels, metrics, asciiOutput, null, viewAsciiOutput, exportCsv, exportAscii);	
 			}
 			@Override
 			protected void done() {
@@ -111,7 +111,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runMapWindow(inputMatrix, metrics, csvOutput);
+				return model.runMapWindow(false, inputMatrix, metrics, csvOutput);
 			}
 			@Override
 			protected void done() {
@@ -129,7 +129,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runGridWindow(inputMatrix, gridSizes, minRate, metrics, asciiOutput, viewAsciiOutput, exportCsv, exportAscii);
+				return model.runGridWindow(false, inputMatrix, gridSizes, minRate, metrics, asciiOutput, null, viewAsciiOutput, exportCsv, exportAscii);
 			}
 			@Override
 			protected void done() {
@@ -692,7 +692,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runSearchAndReplace(asciis, noData, changes, asciiOutput, viewAsciiOutput);
+				return model.runSearchAndReplace(false, asciis, noData, changes, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -781,7 +781,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.exportMapFromCsv(inputCsv, folder, variables, ncols, nrows, 
+				return model.exportAsciiGridFromCsv(false, inputCsv, folder, null, variables, ncols, nrows, 
 						xllcorner, yllcorner, cellsize, nodatavalue, viewAscii);
 			}
 			@Override
@@ -818,7 +818,7 @@ public class Controller {
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
 				
-				return model.exportAsciiGridFromShapefile(shapes, attribute, lookupTable, cellsizes, outputFolder, viewAscii, minx, maxx, miny, maxy);
+				return model.exportAsciiGridFromShapefile(false, shapes, attribute, lookupTable, cellsizes, outputFolder, null, viewAscii, minx, maxx, miny, maxy);
 			}
 			@Override
 			protected void done() {
@@ -834,7 +834,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runDistance(matrix, values, asciiOutput, viewAsciiOutput);
+				return model.runDistance(false, matrix, values, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -850,7 +850,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runFilter(matrix, filterMatrix, values, asciiOutput, viewAsciiOutput);
+				return model.runFilter(false, matrix, filterMatrix, values, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -866,7 +866,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runOverlay(matrix, asciiOutput, viewAsciiOutput);
+				return model.runOverlay(false, matrix, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -899,7 +899,7 @@ public class Controller {
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
 				panel.cleanDomains();
-				return model.runClassification(inputMatrix, domains, asciiOutput, viewAsciiOutput);
+				return model.runClassification(false, inputMatrix, domains, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -917,7 +917,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runCluster(matrix, values, typeCluster, distance, friction, frictionMatrix, asciiOutput, viewAsciiOutput);
+				return model.runCluster(false, matrix, values, typeCluster, distance, friction, frictionMatrix, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {

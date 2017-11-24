@@ -5,7 +5,7 @@
   <artifactId>chloe</artifactId>
   <packaging>jar</packaging>
   <version>4.0</version>
-  <name>chloe</name>
+  <name>chloe_cmd_line</name>
   <url>http://maven.apache.org</url>
 <properties>
 <maven.compiler.source>1.8</maven.compiler.source>
@@ -41,6 +41,16 @@
 	<dependency>
 		<groupId>org.geotools</groupId>
 		<artifactId>gt-shapefile</artifactId>
+		<version>14.5</version>
+	</dependency>
+	<dependency>
+		<groupId>org.geotools</groupId>
+		<artifactId>gt-metadata</artifactId>
+		<version>14.5</version>
+	</dependency>
+	<dependency>
+		<groupId>org.geotools</groupId>
+		<artifactId>gt-opengis</artifactId>
 		<version>14.5</version>
 	</dependency>
 	<dependency>
@@ -93,5 +103,12 @@
 		<artifactId>jts</artifactId>
 		<version>1.13</version>
 	</dependency>
+	 
+	<dependency>
+		<groupId>fr.inra.sad.bagap</groupId>
+		<artifactId>apiland</artifactId>
+		<version>1.0</version>
+	</dependency>
+	 
 </dependencies>
 </project>
