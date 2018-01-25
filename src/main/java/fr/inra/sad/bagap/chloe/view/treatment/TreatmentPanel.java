@@ -2696,8 +2696,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 		for(; 0<tCellsize.getRowCount();){
 			((DefaultTableModel) tCellsize.getModel()).removeRow(0);
 		}
-		if(properties.containsKey("cell_sizes")){
-			String prop = properties.getProperty("cell_sizes");
+		if(properties.containsKey("cellsizes")){
+			String prop = properties.getProperty("cellsizes");
 			prop = prop.replace("{", "").replace("}", "").replace(" ", "");
 			String[] ws = prop.split(";");
 			Vector<Double> vi;
@@ -3232,7 +3232,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 			}
 			sb.append("}");
 			
-			properties.setProperty("cell_sizes", sb.toString());
+			properties.setProperty("cellsizes", sb.toString());
 		}
 	}
 	

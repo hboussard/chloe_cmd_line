@@ -116,7 +116,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 	
 	public boolean runSlidingWindow(boolean batch, Set<Matrix> inputMatrix, WindowShapeType shape, Friction friction, Matrix frictionMatrix,
 			List<Integer> windowSizes, int delta, boolean interpolate, double minRate, Set<String> metrics,
-			String outputFolder, String outputName, boolean viewAsciiOutput, boolean exportCsv, boolean exportAscii,
+			String outputFolder, String outputAsc, String outputCsv, boolean viewAsciiOutput, boolean exportCsv, boolean exportAscii,
 			Set<Integer> filters, Set<Integer> unfilters) {
 		
 		this.batch = batch;
@@ -159,15 +159,15 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 						ws.add(wsize);
 						treatment.setInput("window_sizes", ws);
 						if(exportCsv){
-							if(outputName != null){
-								treatment.setInput("csv", outputFolder+"/"+outputName.replace(".asc", "")+".csv");
+							if(outputCsv != null){
+								treatment.setInput("csv", outputCsv);
 							}else{
 								treatment.setInput("csv", outputFolder+"/"+name+"_"+WindowShapeType.getAbreviation(shape)+"_w"+wsize+".csv");
 							}
 						}
 						if(exportAscii){
-							if(outputName != null){
-								treatment.setInput("ascii", outputFolder+"/"+outputName);
+							if(outputAsc != null){
+								treatment.setInput("ascii", outputAsc);
 							}else{
 								treatment.setInput("ascii", outputFolder+"/"+name+"_"+WindowShapeType.getAbreviation(shape)+"_w"+wsize+"_");
 							}
@@ -197,15 +197,15 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 					
 					treatment.setInput("window_sizes", windowSizes);
 					if(exportCsv){
-						if(outputName != null){
-							treatment.setInput("csv", outputFolder+"/"+outputName.replace(".asc", "")+".csv");
+						if(outputCsv != null){
+							treatment.setInput("csv", outputCsv);
 						}else{
 							treatment.setInput("csv", outputFolder+"/"+name+"_"+WindowShapeType.getAbreviation(shape)+".csv");
 						}
 					}
 					if(exportAscii){
-						if(outputName != null){
-							treatment.setInput("ascii", outputFolder+"/"+outputName);
+						if(outputAsc != null){
+							treatment.setInput("ascii", outputAsc);
 						}else{
 							treatment.setInput("ascii", outputFolder+"/"+name+"_"+WindowShapeType.getAbreviation(shape)+"_");
 						}
@@ -225,7 +225,11 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			
 			// visualization
 			if(viewAsciiOutput){
-				MatrixManager.visualize(outputFolder);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(outputFolder);	
+				}
 			}
 			
 			return true;
@@ -237,7 +241,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 
 	public boolean runSelectedWindow(boolean batch, Set<Matrix> inputMatrix, double minRate, WindowShapeType shape, Friction friction, Matrix frictionMatrix,
 			List<Integer> windowSizes, Set<Pixel> pixels, Set<String> metrics,
-			String outputFolder, String outputName, boolean viewAsciiOutput, boolean exportCsv, boolean exportAscii) {
+			String outputFolder, String outputAsc, String outputCsv, boolean viewAsciiOutput, boolean exportCsv, boolean exportAscii) {
 		
 		this.batch = batch;
 		
@@ -245,7 +249,11 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		
 		try{
 			
-			treatment.setInput("path", outputFolder);
+			if(outputFolder != null){
+				treatment.setInput("path", outputFolder);	
+			}else{
+				treatment.setInput("path", new File(outputAsc).getParent());
+			}
 			
 			// settings
 			treatment.setInput("shape", shape);
@@ -275,15 +283,15 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 						ws.add(wsize);
 						treatment.setInput("window_sizes", ws);
 						if(exportCsv){
-							if(outputName != null){
-								treatment.setInput("csv", outputFolder+"/"+outputName.replace(".asc", "")+".csv");
+							if(outputCsv != null){
+								treatment.setInput("csv", outputCsv);
 							}else{
 								treatment.setInput("csv", outputFolder+"/"+name+"_w"+wsize+".csv");
 							}
 						}
 						if(exportAscii){
-							if(outputName != null){
-								treatment.setInput("ascii", outputFolder+"/"+outputName);
+							if(outputAsc != null){
+								treatment.setInput("ascii", outputAsc);
 							}else{
 								treatment.setInput("ascii", outputFolder+"/"+name+"_w"+wsize+"_");
 							}
@@ -312,15 +320,15 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 						
 					treatment.setInput("window_sizes", windowSizes);
 					if(exportCsv){
-						if(outputName != null){
-							treatment.setInput("csv", outputFolder+"/"+outputName.replace(".asc", "")+".csv");
+						if(outputCsv != null){
+							treatment.setInput("csv", outputCsv);
 						}else{
 							treatment.setInput("csv", outputFolder+"/"+name+"_"+WindowShapeType.getAbreviation(shape)+".csv");
 						}
 					}
 					if(exportAscii){
-						if(outputName != null){
-							treatment.setInput("ascii", outputFolder+"/"+outputName);
+						if(outputAsc != null){
+							treatment.setInput("ascii", outputAsc);
 						}else{
 							treatment.setInput("ascii", outputFolder+"/"+name+"_"+WindowShapeType.getAbreviation(shape)+"_");
 						}
@@ -341,7 +349,11 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			
 			// visualization
 			if(viewAsciiOutput){
-				MatrixManager.visualize(outputFolder);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(outputFolder);
+				}
 			}
 			
 			return true;
@@ -408,7 +420,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean runGridWindow(boolean batch, Set<Matrix> inputMatrix, List<Integer> gridSizes, double minRate, Set<String> metrics, String outputFolder, String outputName, 
+	public boolean runGridWindow(boolean batch, Set<Matrix> inputMatrix, List<Integer> gridSizes, double minRate, Set<String> metrics, String outputFolder, String outputAsc, String outputCsv, 
 			boolean viewAsciiOutput, boolean exportCsv, boolean exportAscii) {
 		
 		this.batch = batch;
@@ -434,15 +446,15 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 					
 					treatment.setInput("grid_size", gsize);
 					if(exportCsv){
-						if(outputName != null){
-							treatment.setInput("csv", outputFolder+"/"+outputName.replace(".asc", "")+".csv");
+						if(outputCsv != null){
+							treatment.setInput("csv", outputCsv);
 						}else{
 							treatment.setInput("csv", outputFolder+"/"+name+"_g"+gsize+".csv");
 						}
 					}
 					if(exportAscii){
-						if(outputName != null){
-							treatment.setInput("ascii", outputFolder+"/"+outputName);
+						if(outputAsc != null){
+							treatment.setInput("ascii", outputAsc);
 						}else{
 							treatment.setInput("ascii", outputFolder+"/"+name+"_g"+gsize+"_");	
 						}
@@ -462,7 +474,11 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			
 			// visualization
 			if(viewAsciiOutput){
-				MatrixManager.visualize(outputFolder);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(outputFolder);	
+				}
 			}
 			
 			return true;
@@ -491,22 +507,21 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean importAsciiGrid(Matrix matrix, String ascii) {
+	public Matrix importAsciiGrid(Matrix matrix, String ascii) {
 		try{
 			publish("import matrix "+ascii);
 			
 			//Matrix m = JaiMatrixFactory.get().createWithAsciiGrid(ascii);
 			Matrix m = JaiMatrixFactory.get().createWithAsciiGridOld(ascii, true);
-			
 			matrix = m;
 			
-			return true;
+			return matrix;
 		} catch(NumberFormatException ex){
 			ex.printStackTrace();
-			return false;
+			return null;
 		} catch(Exception ex){
 			ex.printStackTrace();
-			return false;
+			return null;
 		}
 	}
 	
@@ -570,7 +585,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 
-	public boolean exportAsciiGridFromCsv(boolean batch, String inputCsv, String folder, String outputName,
+	public boolean exportAsciiGridFromCsv(boolean batch, String inputCsv, String folder, String outputAsc,
 			Set<String> variables, int ncols, int nrows, double xllcorner,
 			double yllcorner, double cellsize, int nodatavalue, boolean viewAscii) {
 		this.batch = batch;
@@ -580,14 +595,18 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			if(f.isDirectory()){
 				for(String c : new File(inputCsv).list()){
 					if(c.endsWith(".csv")){
-						SpatialCsvManager.exportAsciiGrid(f+"/"+c, folder, outputName, variables, ncols, nrows, xllcorner, yllcorner, 1, cellsize, nodatavalue);
+						SpatialCsvManager.exportAsciiGrid(f+"/"+c, folder, outputAsc, variables, ncols, nrows, xllcorner, yllcorner, 1, cellsize, nodatavalue);
 					}
 				}
 			}else{
-				SpatialCsvManager.exportAsciiGrid(inputCsv, folder, outputName, variables, ncols, nrows, xllcorner, yllcorner, 1, cellsize, nodatavalue);
+				SpatialCsvManager.exportAsciiGrid(inputCsv, folder, outputAsc, variables, ncols, nrows, xllcorner, yllcorner, 1, cellsize, nodatavalue);
 			}
 			if(viewAscii){
-				MatrixManager.visualize(folder);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(folder);	
+				}
 			}
 			
 			return true;
@@ -628,14 +647,14 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		return s;	
 	}
 	
-	public boolean runSearchAndReplace(boolean batch, Set<String> asciis, int noData, Map<Integer, Number> changes, String outputFolder, String outputName, boolean viewAscii) {
+	public boolean runSearchAndReplace(boolean batch, Set<String> asciis, int noData, Map<Integer, Number> changes, String outputFolder, String outputAsc, boolean viewAscii) {
 		this.batch = batch;
 		try{
 			String out;
 			for(String ascii : asciis){
 				publish("search and replace : "+ascii);
-				if(outputName != null){
-					out = outputFolder+"/"+outputName;
+				if(outputAsc != null){
+					out = outputAsc;
 				}else{
 					out = outputFolder+"/"+new File(ascii).getName();	
 				}
@@ -643,7 +662,11 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			}	
 			
 			if(viewAscii){
-				MatrixManager.visualize(outputFolder);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(outputFolder);	
+				}
 			}
 			
 			return true;
@@ -667,7 +690,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 	}
 
 	public boolean exportAsciiGridFromShapefile(boolean batch, Set<String> layers, String attribute, String lookupTable,
-			Set<Double> cellsizes, String outputFolder, String outputName, boolean viewAscii,
+			Set<Double> cellsizes, String outputFolder, String outputAsc, boolean viewAscii,
 			Double minx, Double maxx, Double miny, Double maxy){
 		this.batch = batch;
 		try{
@@ -678,9 +701,9 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				
 				name = new File(layer).getName().replace(".shp", ""); 
 				for(double cellsize : cellsizes){
-					if(outputName != null){
-						publish("export "+outputName+" with cellsize "+cellsize);
-						ascii = outputFolder+"/"+outputName;
+					if(outputAsc != null){
+						publish("export "+outputAsc+" with cellsize "+cellsize);
+						ascii = outputAsc;
 					}else{
 						publish("export "+name+" with cellsize "+cellsize);
 						ascii = outputFolder+"/"+name+"_"+formatDoubleToString(cellsize)+".asc";
@@ -712,7 +735,11 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			}
 			
 			if(viewAscii){
-				MatrixManager.visualize(outputFolder);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(outputFolder);	
+				}
 			}
 			
 			return true;
@@ -722,7 +749,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean runDistance(boolean batch, Set<Matrix> matrix, Set<Integer> values, String asciiOutput, String outputname, boolean viewAsciiOutput) {
+	public boolean runDistance(boolean batch, Set<Matrix> matrix, Set<Integer> values, String asciiOutput, String outputAsc, boolean viewAsciiOutput) {
 		this.batch = batch;
 		try{
 			for(Matrix m : matrix){	
@@ -749,8 +776,8 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				pp.addObserver(this);
 				Matrix m3 = pp.allRun();
 				
-				if(outputname != null){
-					MatrixManager.exportAsciiGrid(m3, asciiOutput+"/"+outputname);
+				if(outputAsc != null){
+					MatrixManager.exportAsciiGrid(m3, outputAsc);
 				}else{
 					MatrixManager.exportAsciiGrid(m3, asciiOutput+"/"+name+"_dist-"+values+".asc");
 				}
@@ -759,7 +786,11 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			}	
 			
 			if(viewAsciiOutput){
-				MatrixManager.visualize(asciiOutput);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(asciiOutput);	
+				}
 			}
 			
 			return true;
@@ -769,7 +800,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean runFilter(boolean batch, Set<Matrix> matrix, Matrix filterMatrix, Set<Integer> values, String asciiOutput, String outputName, boolean viewAsciiOutput) {
+	public boolean runFilter(boolean batch, Set<Matrix> matrix, Matrix filterMatrix, Set<Integer> values, String asciiOutput, String outputAsc, boolean viewAsciiOutput) {
 		this.batch = batch;
 		try{
 			for(Matrix m : matrix){	
@@ -777,7 +808,6 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				
 				publish("filter calculation: "+m.getFile());
 				progress = 0;
-				
 				Pixel2PixelMatrixCalculation pp = new Pixel2PixelMatrixCalculation(m, filterMatrix){
 					@Override
 					protected double treatPixel(Pixel p) {
@@ -793,15 +823,19 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				pp.addObserver(this);
 				Matrix m2 = pp.allRun();
 				
-				if(outputName != null){
-					MatrixManager.exportAsciiGrid(m2, asciiOutput+"/"+outputName);
+				if(outputAsc != null){
+					MatrixManager.exportAsciiGrid(m2, outputAsc);
 				}else{
 					MatrixManager.exportAsciiGrid(m2, asciiOutput+"/"+name+"_filter-"+values+".asc");
 				}
 			}	
 			
 			if(viewAsciiOutput){
-				MatrixManager.visualize(asciiOutput);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(asciiOutput);	
+				}
 			}
 			
 			return true;
@@ -811,7 +845,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 
-	public boolean runClassification(boolean batch, Set<Matrix> matrix, Map<Domain<Double, Double>, Integer> domains, String asciiOutput, String outputName, boolean viewAsciiOutput) {
+	public boolean runClassification(boolean batch, Set<Matrix> matrix, Map<Domain<Double, Double>, Integer> domains, String asciiOutput, String outputAsc, boolean viewAsciiOutput) {
 		this.batch = batch;
 		try{
 			for(Matrix m : matrix){
@@ -822,15 +856,19 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				c.addObserver(this);
 				Matrix m2 = c.allRun();
 				
-				if(outputName !=  null){
-					MatrixManager.exportAsciiGrid(m2, asciiOutput+"/"+outputName);
+				if(outputAsc !=  null){
+					MatrixManager.exportAsciiGrid(m2, outputAsc);
 				}else{				
 					MatrixManager.exportAsciiGrid(m2, asciiOutput+"/"+name+"_class.asc");
 				}
 			}	
 			
 			if(viewAsciiOutput){
-				MatrixManager.visualize(asciiOutput);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(asciiOutput);	
+				}
 			}
 			
 			return true;
@@ -840,7 +878,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean runOverlay(boolean batch, List<Matrix> matrix, String asciiOutput, String outputName, boolean viewAsciiOutput){
+	public boolean runOverlay(boolean batch, List<Matrix> matrix, String asciiOutput, String outputAsc, boolean viewAsciiOutput){
 		this.batch = batch;
 		try {
 			progress = 0;
@@ -874,10 +912,10 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			ppm.addObserver(this);
 			Matrix mo = ppm.allRun();
 			
-			if(outputName != null){
-				MatrixManager.exportAsciiGrid(mo, asciiOutput+"/"+outputName);
+			if(outputAsc != null){
+				MatrixManager.exportAsciiGrid(mo, outputAsc);
 				if(viewAsciiOutput){
-					MatrixManager.visualize(asciiOutput+"/"+outputName);
+					MatrixManager.visualize(outputAsc);
 				}
 			}else{
 				MatrixManager.exportAsciiGrid(mo, asciiOutput+"/"+name+".asc");
@@ -931,7 +969,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 	}
 	
 	public boolean runCluster(boolean batch, Set<Matrix> matrix, Set<Integer> values, String typeCluster, double distance, Friction friction, Matrix frictionMatrix, 
-			/*boolean sameType, boolean sameMap,*/ String asciiOutput, String outputName, boolean viewAsciiOutput){
+			/*boolean sameType, boolean sameMap,*/ String asciiOutput, String outputAsc, boolean viewAsciiOutput){
 		this.batch = batch;
 		try {
 			String name = "cluster";
@@ -954,8 +992,8 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 					}
 					break;
 				}
-				if(outputName != null){
-					ca.addObserver(new ClusteringCsvOutput(asciiOutput+"/"+outputName.replace(".asc", "")+".csv"));
+				if(outputAsc != null){
+					ca.addObserver(new ClusteringCsvOutput(outputAsc.replace(".asc", "")+".csv"));
 				}else{
 					ca.addObserver(new ClusteringCsvOutput(asciiOutput+"/"+name+"_"+suf+".csv"));
 				}
@@ -977,15 +1015,19 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 						return Raster.getNoDataValue();
 					}
 				};
-				if(outputName != null){
-					MatrixManager.exportAsciiGrid(ppt.allRun(), asciiOutput+"/"+outputName);
+				if(outputAsc != null){
+					MatrixManager.exportAsciiGrid(ppt.allRun(), outputAsc);
 				}else{
 					MatrixManager.exportAsciiGrid(ppt.allRun(), asciiOutput+"/"+name+"_"+suf+".asc");
 				}
 			}
 			
 			if(viewAsciiOutput){
-				MatrixManager.visualize(asciiOutput);
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(asciiOutput);	
+				}
 			}
 			
 			return true;

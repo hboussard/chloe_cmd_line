@@ -72,7 +72,7 @@ public class Controller {
 				ihm.start();
 				
 				return model.runSlidingWindow(false, inputMatrix, shape, friction, frictionMatrix,
-						windowSizes, delta, interpolate, minRate, metrics, outputFolder, null, viewAsciiOutput, exportCsv, exportAscii,
+						windowSizes, delta, interpolate, minRate, metrics, outputFolder, null, null, viewAsciiOutput, exportCsv, exportAscii,
 						filters, unfilters);
 			}
 			@Override
@@ -94,7 +94,7 @@ public class Controller {
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
 				return model.runSelectedWindow(false, inputMatrix, minRate, shape, friction, frictionMatrix, 
-						windowSizes, pixels, metrics, asciiOutput, null, viewAsciiOutput, exportCsv, exportAscii);	
+						windowSizes, pixels, metrics, asciiOutput, null, null, viewAsciiOutput, exportCsv, exportAscii);	
 			}
 			@Override
 			protected void done() {
@@ -129,7 +129,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runGridWindow(false, inputMatrix, gridSizes, minRate, metrics, asciiOutput, null, viewAsciiOutput, exportCsv, exportAscii);
+				return model.runGridWindow(false, inputMatrix, gridSizes, minRate, metrics, asciiOutput, null, null, viewAsciiOutput, exportCsv, exportAscii);
 			}
 			@Override
 			protected void done() {
@@ -181,7 +181,8 @@ public class Controller {
 			protected Boolean doInBackground() throws Exception {	
 				ihm.start();
 				try{
-					if(model.importAsciiGrid(matrix, ascii)){
+					model.importAsciiGrid(matrix, ascii);
+					if(matrix != null){
 						return true;
 					}
 				}catch(Exception ex){

@@ -23,7 +23,7 @@ public class LogoFrame extends Frame {
         setUndecorated(true); 
         setFocusable(false); 
         setEnabled(false); 
-        setTitle("Chloe2012");
+        setTitle("Chloe-4.0");
 		setIconImage(Toolkit.getDefaultToolkit().getImage(LocalContext.get().getIcon()));
         img = this.getToolkit().createImage(LocalContext.get().getLogo());
         setLocationRelativeTo(null);

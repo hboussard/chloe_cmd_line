@@ -1,5 +1,5 @@
 # ImageJ 1.37k Preferences
-# Wed Nov 15 15:02:12 CET 2017
+# Wed Jan 24 15:35:36 CET 2018
 
 fps=7.0
 new.type=0

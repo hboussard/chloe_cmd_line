@@ -61,7 +61,7 @@ public class LocalContext implements Serializable{
 	
 	private static final String logo = repImages+"chloe_logo.jpg";
 	
-	private static final String documentation = "system/documentation/documentation_chloe2012.pdf";
+	private static final String documentation = "system/documentation/documentation_chloe.pdf";
 	
 	private String repUserData = "";
 
