@@ -74,13 +74,6 @@ public class OverlayPanel extends TreatmentPanel {
 		c.gridy = 1;
 		add(bViewAscii, c);
 		
-		c.gridx = 2;
-		c.gridy = 6;
-		c.anchor = GridBagConstraints.PAGE_START;
-		c.fill = GridBagConstraints.NONE;
-		c.weightx = 0;
-		add(bOutputFolder, c);
-		
 		c.gridx = 0;
 		c.gridy = 6;
 		c.anchor = GridBagConstraints.LINE_END;
@@ -91,28 +84,28 @@ public class OverlayPanel extends TreatmentPanel {
 		c.anchor = GridBagConstraints.FIRST_LINE_START;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		add(taOutputFolder, c);
+		add(taOutputFolder2, c);
 		
 		c.gridx = 2;
 		c.gridy = 6;
 		c.anchor = GridBagConstraints.PAGE_START;
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
-		add(bOutputFolder, c);
+		add(bOutputFolder2, c);
 		
 		c.gridx = 1;
 		c.gridy = 7;
 		c.weighty = 1;
 		c.anchor = GridBagConstraints.FIRST_LINE_START;
 		c.fill = GridBagConstraints.NONE;
-		add(viewAsciiOutput, c);
+		add(viewAsciiOutput2, c);
 	}
 	
 	@Override
 	public boolean validateRun(List<String> list) {
 		boolean validate = true;
 		
-		if(taOutputFolder.getText().equalsIgnoreCase("")){
+		if(taOutputFolder2.getText().equalsIgnoreCase("")){
 			 list.add("Please choose an ascci grid output matrix file");
 			 validate = false;
 		}
@@ -123,20 +116,20 @@ public class OverlayPanel extends TreatmentPanel {
 	@Override
 	public void doImport(Properties properties) {
 		importOverlayingMatrix(properties);
-		importOutputFolder(properties);
-		importVisualizeAscii(properties);
+		importOutputFolder2(properties);
+		importVisualizeAscii2(properties);
 	}
 	
 	@Override
 	public void doExport(Properties properties){
 		exportOverlayingMatrix(properties);
-		exportOutputFolder(properties);
-		exportVisualizeAscii(properties);
+		exportOutputFolder2(properties);
+		exportVisualizeAscii2(properties);
 	}
 
 	@Override
 	public void run() {
-		getController().runOverlay(inputMatrix2, taOutputFolder.getText(), viewAsciiOutput.isSelected());
+		getController().runOverlay(inputMatrix2, taOutputFolder2.getText(), viewAsciiOutput2.isSelected());
 	}
 
 }

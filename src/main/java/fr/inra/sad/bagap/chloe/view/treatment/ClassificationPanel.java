@@ -153,6 +153,7 @@ public class ClassificationPanel extends TreatmentPanel {
 	}
 	
 	public static Domain<Double, Double> getDomain(String value) {
+		value = value.replace(" ", "");
 		if(value.startsWith("[")){
 			if(value.endsWith("]")){
 				String[] d = value.replace("[", "").replace("]", "").replace(" ", "").split(",", 2);

@@ -23,6 +23,7 @@ public class TreatmentTree extends JTree{
 	private Wizard wizard;
 	
 	public static final int r = 255, g = 255, b = 255;
+	//public static final int r = 245, g = 245, b = 255;
 	
 	public TreatmentTree(Wizard wizard){
 		super();
@@ -49,6 +50,7 @@ public class TreatmentTree extends JTree{
 				Icon icone = null;
 				if(node.getUserObject() instanceof TreatmentPanel){
 	  				icone = new ImageIcon(LocalContext.get().getRepImages() + "treatment.png");
+	  				//icone = new ImageIcon(LocalContext.get().getRepImages() + "chloe_icon.jpg");
 	  			}else{
 	  				icone = new ImageIcon(LocalContext.get().getRepImages() + "group.png");
 	  			}
@@ -106,6 +108,7 @@ public class TreatmentTree extends JTree{
 		node.add(new DefaultMutableTreeNode(new DistancePanel(wizard)));
 		node.add(new DefaultMutableTreeNode(new ClassificationPanel(wizard)));
 		node.add(new DefaultMutableTreeNode(new ClusterPanel(wizard)));
+		//node.add(new DefaultMutableTreeNode(new GroupPanel(wizard)));
 		node.add(new DefaultMutableTreeNode(new CombinePanel(wizard)));
 		node.add(new DefaultMutableTreeNode(new FilterPanel(wizard)));
 		root.add(node);

@@ -16,6 +16,7 @@ import com.csvreader.CsvReader.FinalizedException;
 
 import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.WindowShapeType;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Pixel;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.RefPoint;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Friction;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Matrix;
 import fr.inra.sad.bagap.apiland.domain.Domain;
@@ -62,7 +63,7 @@ public class Controller {
 	}
 	
 	public void runSlidingWindow(final Set<Matrix> inputMatrix, final WindowShapeType shape, final Friction friction, final Matrix frictionMatrix,
-			final List<Integer> windowSizes, final int delta, final boolean interpolate, final double minRate,	
+			final List<Integer> windowSizes, final String distanceFunction, final int delta, final int xOrigin, final int yOrigin, final boolean interpolate, final double minRate,	
 			final Set<String> metrics, final String outputFolder, final boolean viewAsciiOutput, final boolean exportCsv, 
 			final boolean exportAscii, final Set<Integer> filters, final Set<Integer> unfilters) {
 	
@@ -72,7 +73,8 @@ public class Controller {
 				ihm.start();
 				
 				return model.runSlidingWindow(false, inputMatrix, shape, friction, frictionMatrix,
-						windowSizes, delta, interpolate, minRate, metrics, outputFolder, null, null, viewAsciiOutput, exportCsv, exportAscii,
+						windowSizes, distanceFunction, delta, xOrigin, yOrigin, interpolate, minRate, metrics, 
+						outputFolder, null, null, viewAsciiOutput, exportCsv, exportAscii,
 						filters, unfilters);
 			}
 			@Override
@@ -85,8 +87,8 @@ public class Controller {
 	}
 
 	public void runSelectedWindow(final Set<Matrix> inputMatrix, final double minRate,
-			final WindowShapeType shape, final Friction friction, final Matrix frictionMatrix, final List<Integer> windowSizes,
-			final Set<Pixel> pixels, final Set<String> metrics, final String asciiOutput,
+			final WindowShapeType shape, final Friction friction, final Matrix frictionMatrix, final List<Integer> windowSizes, final String distanceFunction,
+			final Set<Pixel> pixels, final Set<RefPoint> points, final Set<String> metrics, final String asciiOutput,
 			final boolean viewAsciiOutput, final boolean exportCsv, final boolean exportAscii) {
 
 		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
@@ -94,7 +96,7 @@ public class Controller {
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
 				return model.runSelectedWindow(false, inputMatrix, minRate, shape, friction, frictionMatrix, 
-						windowSizes, pixels, metrics, asciiOutput, null, null, viewAsciiOutput, exportCsv, exportAscii);	
+						windowSizes, distanceFunction, pixels, points, metrics, asciiOutput, null, null, viewAsciiOutput, exportCsv, exportAscii);	
 			}
 			@Override
 			protected void done() {
@@ -141,53 +143,25 @@ public class Controller {
 	}
 	
 	public void importAsciiGridFilter(final TreatmentPanel panel, final Set<Matrix> matrix, final String ascii) {
-		if(model.importAsciiGrid(matrix, ascii)){
+		if(model.importAsciiGrid(matrix, ascii, true)){
 			panel.displayIhm4(ascii);
 		}
 	}
 	
-	/*
-	public void importAsciiGridFilter(final TreatmentPanel panel, final Set<Matrix> matrix, final String ascii) {
+	public void importAsciiGridFriction(final TreatmentPanel panel, final Set<Matrix> matrix, final String ascii) {
 		
 		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
 			@Override
 			protected Boolean doInBackground() throws Exception {	
 				ihm.start();
 				try{
-					if(model.importAsciiGrid(matrix, ascii)){
-						panel.displayIhm4(ascii);
-						return true;
-					}
-				}catch(Exception ex){
-					ex.printStackTrace();
-					return false;
-				}
-				return false;
-			}
-			@Override
-			protected void done() {
-				super.done();
-				ihm.resetProgressBar();
-			}
-			
-		};
-		swingworker.execute();
-	}*/
-	
-	public void importAsciiGridFriction(final TreatmentPanel panel, final Matrix matrix, final String ascii) {
-		
-		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
-			@Override
-			protected Boolean doInBackground() throws Exception {	
-				ihm.start();
-				try{
-					model.importAsciiGrid(matrix, ascii);
+					model.importAsciiGrid(matrix, ascii, true);
+					//System.out.println(matrix);
 					if(matrix != null){
 						return true;
 					}
 				}catch(Exception ex){
 					ex.printStackTrace();
-					return false;
 				}
 				return false;
 			}
@@ -204,15 +178,16 @@ public class Controller {
 	public void importAsciiGrid(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
 		
 		File file = new File(ascii);
+		//matrix.clear();
 		if(file.isFile()){
-			if(model.importAsciiGrid(matrix, ascii)){
+			if(model.importAsciiGrid(matrix, ascii, true)){
 				panel.displayIhm();
 			}else{
 				
 				System.err.println("not possible to import this file : "+ascii+", try to clean it");
 				ihm.publish("not possible to import this file : "+ascii+", try to clean it");
 				model.cleanAsciiGrid(ascii);
-				if(model.importAsciiGrid(matrix, ascii)){
+				if(model.importAsciiGrid(matrix, ascii, true)){
 					panel.displayIhm();
 				}else{
 					System.err.println("not possible to import this file : "+ascii);
@@ -222,7 +197,7 @@ public class Controller {
 		}else{
 			for(File f : file.listFiles()){
 				if(f.isFile() && f.getName().endsWith(".asc")){
-					if(!model.importAsciiGrid(matrix, f.toString())){
+					if(!model.importAsciiGrid(matrix, f.toString(), true)){
 						ihm.publish("not possible to import this file : "+f.toString()+", try to clean it");
 						model.cleanAsciiGrid(f.toString());
 					}
@@ -232,75 +207,17 @@ public class Controller {
 		}
 	}
 	
-	/*
-	public void importAsciiGrid(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
-		
-		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
-			@Override
-			protected Boolean doInBackground() throws Exception {	
-				ihm.start();
-				try{
-					File file = new File(ascii);
-					if(file.isFile()){
-						if(model.importAsciiGrid(matrix, ascii)){
-							panel.displayIhm(true);
-							return true;
-						}else{
-							
-							System.err.println("not possible to import this file : "+ascii+", try to clean it");
-							ihm.publish("not possible to import this file : "+ascii+", try to clean it");
-							model.cleanAsciiGrid(ascii);
-							if(model.importAsciiGrid(matrix, ascii)){
-								panel.displayIhm(true);
-								return true;
-							}else{
-								System.err.println("not possible to import this file : "+ascii);
-								ihm.publish("not possible to import this file : "+ascii);
-								return false;
-							}
-						}
-					}else{
-						for(File f : file.listFiles()){
-							if(f.isFile() && f.getName().endsWith(".asc")){
-								if(!model.importAsciiGrid(matrix, f.toString())){
-									ihm.publish("not possible to import this file : "+f.toString()+", try to clean it");
-									model.cleanAsciiGrid(f.toString());
-									if(!model.importAsciiGrid(matrix, f.toString())){
-										return false;
-									}
-								}
-							}
-						}
-						panel.displayIhm(false);
-						return true;
-					}
-				}catch(Exception ex){
-					ex.printStackTrace();
-					return false;
-				}
-			}
-			
-			@Override
-			protected void done() {
-				super.done();
-				ihm.resetProgressBar();
-			}
-			
-		};
-		swingworker.execute();
-	}*/
-	
 	public void importAsciiGrid2(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
 		File file = new File(ascii);
 		if(file.isFile()){
-			if(model.importAsciiGrid(matrix, ascii)){
+			if(model.importAsciiGrid(matrix, ascii, true)){
 				panel.displayIhm2(ascii);
 			}else{
 				
 				System.err.println("not possible to import this file : "+ascii+", try to clean it");
 				ihm.publish("not possible to import this file : "+ascii+", try to clean it");
 				model.cleanAsciiGrid(ascii);
-				if(model.importAsciiGrid(matrix, ascii)){
+				if(model.importAsciiGrid(matrix, ascii, true)){
 					panel.displayIhm2(ascii);
 				}else{
 					System.err.println("not possible to import this file : "+ascii);
@@ -312,64 +229,17 @@ public class Controller {
 		}
 	}
 	
-	/*
-	public void importAsciiGrid2(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
-		
-		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
-			@Override
-			protected Boolean doInBackground() throws Exception {	
-				ihm.start();
-				try{
-					File file = new File(ascii);
-					if(file.isFile()){
-						if(model.importAsciiGrid(matrix, ascii)){
-							panel.displayIhm2(ascii);
-							return true;
-						}else{
-							
-							System.err.println("not possible to import this file : "+ascii+", try to clean it");
-							ihm.publish("not possible to import this file : "+ascii+", try to clean it");
-							model.cleanAsciiGrid(ascii);
-							if(model.importAsciiGrid(matrix, ascii)){
-								panel.displayIhm2(ascii);
-								return true;
-							}else{
-								System.err.println("not possible to import this file : "+ascii);
-								ihm.publish("not possible to import this file : "+ascii);
-								return false;
-							}
-						}
-					}else{
-						throw new IllegalArgumentException();
-					}
-				}catch(Exception ex){
-					ex.printStackTrace();
-					return false;
-				}
-			}
-			
-			@Override
-			protected void done() {
-				super.done();
-				ihm.resetProgressBar();
-			}
-			
-		};
-		swingworker.execute();
-	}
-	*/
-	
 	public void importAsciiGrid3(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
 		File file = new File(ascii);
 		if(file.isFile()){
-			if(model.importAsciiGrid(matrix, ascii)){
+			if(model.importAsciiGrid(matrix, ascii, true)){
 				panel.displayIhm3(ascii);
 			}else{
 				
 				System.err.println("not possible to import this file : "+ascii+", try to clean it");
 				ihm.publish("not possible to import this file : "+ascii+", try to clean it");
 				model.cleanAsciiGrid(ascii);
-				if(model.importAsciiGrid(matrix, ascii)){
+				if(model.importAsciiGrid(matrix, ascii, true)){
 					panel.displayIhm3(ascii);
 				}else{
 					System.err.println("not possible to import this file : "+ascii);
@@ -381,52 +251,6 @@ public class Controller {
 		}
 	}
 	
-	/*
-	public void importAsciiGrid3(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
-		
-		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
-			@Override
-			protected Boolean doInBackground() throws Exception {	
-				ihm.start();
-				try{
-					File file = new File(ascii);
-					if(file.isFile()){
-						if(model.importAsciiGrid(matrix, ascii)){
-							panel.displayIhm3(ascii);
-							return true;
-						}else{
-							
-							System.err.println("not possible to import this file : "+ascii+", try to clean it");
-							ihm.publish("not possible to import this file : "+ascii+", try to clean it");
-							model.cleanAsciiGrid(ascii);
-							if(model.importAsciiGrid(matrix, ascii)){
-								panel.displayIhm3(ascii);
-								return true;
-							}else{
-								System.err.println("not possible to import this file : "+ascii);
-								ihm.publish("not possible to import this file : "+ascii);
-								return false;
-							}
-						}
-					}else{
-						throw new IllegalArgumentException();
-					}
-				}catch(Exception ex){
-					ex.printStackTrace();
-					return false;
-				}
-			}
-			
-			@Override
-			protected void done() {
-				super.done();
-				ihm.resetProgressBar();
-			}
-			
-		};
-		swingworker.execute();
-	}*/
-	
 	public void importShapefile(final TreatmentPanel panel, final String inputShape, final Set<String> shapes) {
 		Map<String, String> attributes = new TreeMap<String, String>();
 		File f = new File(inputShape);
@@ -437,7 +261,7 @@ public class Controller {
 			totalenvelope[2] = Double.MAX_VALUE;
 			totalenvelope[3] = Double.MIN_VALUE;
 			for(String file : f.list()){
-				if(file.endsWith(".shp")){
+				if(file.endsWith(".shp") || inputShape.endsWith(".SHP")){
 					double[] envelope = new double[4];
 					model.getAttributesAndEnvelopeFromShapefile(inputShape+"/"+file, attributes, envelope);
 					shapes.add(inputShape+"/"+file);
@@ -449,7 +273,7 @@ public class Controller {
 			}
 			panel.displayAttributes(inputShape, false, attributes, totalenvelope);
 		}else{
-			if(inputShape.endsWith(".shp")){
+			if(inputShape.endsWith(".shp") || inputShape.endsWith(".SHP")){
 				double[] envelope = new double[4];
 				model.getAttributesAndEnvelopeFromShapefile(inputShape, attributes, envelope);
 				shapes.add(inputShape);
@@ -457,61 +281,6 @@ public class Controller {
 			}
 		}
 	}
-	/*
-	public void importShapefile(final TreatmentPanel panel, final String inputShape, final Set<String> shapes) {
-		System.out.println("lancement de l'importation");
-		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
-			@Override
-			protected Boolean doInBackground() throws Exception {	
-				ihm.start();
-				try{
-					Map<String, String> attributes = new TreeMap<String, String>();
-					File f = new File(inputShape);
-					if(f.isDirectory()){
-						double[] totalenvelope = new double[4];
-						totalenvelope[0] = Double.MAX_VALUE;
-						totalenvelope[1] = Double.MIN_VALUE;
-						totalenvelope[2] = Double.MAX_VALUE;
-						totalenvelope[3] = Double.MIN_VALUE;
-						for(String file : f.list()){
-							if(file.endsWith(".shp")){
-								double[] envelope = new double[4];
-								model.getAttributesAndEnvelopeFromShapefile(inputShape+"/"+file, attributes, envelope);
-								shapes.add(inputShape+"/"+file);
-								totalenvelope[0] = Math.min(totalenvelope[0], envelope[0]);
-								totalenvelope[1] = Math.max(totalenvelope[1], envelope[1]);
-								totalenvelope[2] = Math.min(totalenvelope[2], envelope[2]);
-								totalenvelope[3] = Math.max(totalenvelope[3], envelope[3]);
-							}
-						}
-						panel.displayAttributes(inputShape, false, attributes, totalenvelope);
-						//panel.enabledImportation();
-						return true;
-					}else{
-						if(inputShape.endsWith(".shp")){
-							double[] envelope = new double[4];
-							model.getAttributesAndEnvelopeFromShapefile(inputShape, attributes, envelope);
-							shapes.add(inputShape);
-							panel.displayAttributes(inputShape, true, attributes, envelope);
-							//panel.enabledImportation();
-							return true;
-						}
-						return false;
-					}
-				}catch(Exception ex){
-					ex.printStackTrace();
-				}
-				return false;
-			}
-			
-			@Override
-			protected void done() {
-				super.done();
-				ihm.resetProgressBar();
-			}
-		};
-		swingworker.execute();
-	}*/
 	
 	public void importXYCsv(final TreatmentPanel panel, final String inputCsv, final Set<String> variables){
 		try{
@@ -544,7 +313,8 @@ public class Controller {
 				}
 				cr.close();
 				panel.displayVariables();
-				panel.enabledIhm();
+				//panel.enabledIhm();
+				panel.enabledIhmforCsv();
 			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -556,71 +326,6 @@ public class Controller {
 			ex.printStackTrace();
 		}
 	}
-	
-	/*
-	public void importXYCsv2(final TreatmentPanel panel, final String inputCsv, final Set<String> variables){
-		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
-			@Override
-			protected Boolean doInBackground() throws Exception {	
-				ihm.start();
-				try{
-					File fcsv = new File(inputCsv);
-					if(fcsv.isDirectory()){
-						for(String csv : fcsv.list()){
-							if(csv.endsWith(".csv")){
-								CsvReader cr = new CsvReader(inputCsv+"/"+csv);
-								cr.setDelimiter(';');
-								cr.readHeaders();
-								
-								for(String h : cr.getHeaders()){
-									if(!h.equalsIgnoreCase("X") && !h.equalsIgnoreCase("Y")){
-										variables.add(h);
-									}
-								}
-								cr.close();
-							}
-						}
-						panel.displayVariables(false);
-						panel.enabledIhm(false);
-						//panel.enabledImportation();
-					}else{
-						CsvReader cr = new CsvReader(inputCsv);
-						cr.setDelimiter(';');
-						cr.readHeaders();
-						for(String h : cr.getHeaders()){
-							if(!h.equalsIgnoreCase("X") && !h.equalsIgnoreCase("Y")){
-								variables.add(h);
-							}
-						}
-						cr.close();
-						panel.displayVariables(true);
-						panel.enabledIhm(true);
-						//panel.enabledImportation();
-					}
-					return true;
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				} catch (FinalizedException e1) {
-					e1.printStackTrace();
-				} catch (CatastrophicException e1) {
-					e1.printStackTrace();
-				}catch(Exception ex){
-					ex.printStackTrace();
-				}
-				return false;
-			}
-			
-			@Override
-			protected void done() {
-				super.done();
-				ihm.resetProgressBar();
-			}
-			
-		};
-		swingworker.execute();
-		
-	}
-	*/
 	
 	public void importMapCsv(final TreatmentPanel panel, final String inputCsv, final Set<String> variables){
 		try{
@@ -644,47 +349,6 @@ public class Controller {
 			ex.printStackTrace();
 		}
 	}
-	
-	/*
-	public void importMapCsv(final TreatmentPanel panel, final String inputCsv, final Set<String> variables){
-		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
-			@Override
-			protected Boolean doInBackground() throws Exception {	
-				ihm.start();
-				try{
-					CsvReader cr = new CsvReader(inputCsv);
-					cr.setDelimiter(';');
-					cr.readHeaders();
-					for(String h : cr.getHeaders()){
-						if(!h.equalsIgnoreCase("id")){
-							variables.add(h);
-						}
-					}
-					cr.close();
-					panel.displayVMap();
-					return true;
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				} catch (FinalizedException e1) {
-					e1.printStackTrace();
-				} catch (CatastrophicException e1) {
-					e1.printStackTrace();
-				}catch(Exception ex){
-					ex.printStackTrace();
-				}
-				return false;
-			}
-			
-			@Override
-			protected void done() {
-				super.done();
-				ihm.resetProgressBar();
-			}
-			
-		};
-		swingworker.execute();
-		
-	}*/
 	
 	public void runSearchAndReplace(final Set<String> asciis, final int noData, final Map<Integer, Number> changes, 
 			final String asciiOutput, final boolean viewAsciiOutput) {
@@ -830,12 +494,13 @@ public class Controller {
 		swingworker.execute();
 	}
 	
-	public void runDistance(final Set<Matrix> matrix, final Set<Integer> values, final String asciiOutput, final boolean viewAsciiOutput) {
+	public void runDistance(final Set<Matrix> matrix, final Set<Integer> values, final String typeDistance, final double distance, 
+			final Friction friction, final Matrix frictionMatrix, final String asciiOutput, final boolean viewAsciiOutput) {
 		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runDistance(false, matrix, values, asciiOutput, null, viewAsciiOutput);
+				return model.runDistance(false, matrix, values, typeDistance, distance, friction, frictionMatrix, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -878,12 +543,12 @@ public class Controller {
 		swingworker.execute();
 	}
 	
-	public void runCombine(final List<Matrix> matrix, final List<Double> factors, final String asciiOutput, final boolean viewAsciiOutput) {
+	public void runCombine(final List<Matrix> matrix, final List<String> names, String formula, final String asciiOutput, final boolean viewAsciiOutput) {
 		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runCombine(matrix, factors, asciiOutput, viewAsciiOutput);
+				return model.runCombine(matrix, names, formula, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -899,7 +564,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				panel.cleanDomains();
+				//panel.cleanDomains();
 				return model.runClassification(false, inputMatrix, domains, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
@@ -911,14 +576,33 @@ public class Controller {
 		swingworker.execute();
 	}
 	
-	public void runCluster(final Set<Matrix> matrix, final Set<Integer> values, final String typeCluster, final double distance, 
+	public void runCluster(final Set<Matrix> matrix, final List<Integer> values, final String typeCluster, final double distance, final double minimumTotalArea,
 			final Friction friction, final Matrix frictionMatrix, 
-			final String asciiOutput, final boolean viewAsciiOutput) {
+			final String outputFolder, final boolean viewAsciiOutput) {
 		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runCluster(false, matrix, values, typeCluster, distance, friction, frictionMatrix, asciiOutput, null, viewAsciiOutput);
+				return model.runCluster(false, matrix, values, typeCluster, distance, minimumTotalArea, friction, frictionMatrix, outputFolder, null, viewAsciiOutput);
+			}
+			@Override
+			protected void done() {
+				super.done();
+				ihm.reset();
+			}
+		};
+		swingworker.execute();
+	}
+	
+	public void runGroup(final Set<Matrix> matrix, final List<Integer> values, final List<Double> minimumAreas, 
+			final double minimumTotal, final String typeCluster, final double distance, 
+			final Friction friction, final Matrix frictionMatrix, 
+			final String outputFolder, final boolean viewAsciiOutput) {
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {
+				ihm.start();
+				return model.runGroup(false, matrix, values, minimumAreas, minimumTotal, typeCluster, distance, friction, frictionMatrix, outputFolder, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -1057,4 +741,345 @@ public class Controller {
 	}
 	
 	*/
+	
+	/*
+	public void importAsciiGridFilter(final TreatmentPanel panel, final Set<Matrix> matrix, final String ascii) {
+		
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {	
+				ihm.start();
+				try{
+					if(model.importAsciiGrid(matrix, ascii)){
+						panel.displayIhm4(ascii);
+						return true;
+					}
+				}catch(Exception ex){
+					ex.printStackTrace();
+					return false;
+				}
+				return false;
+			}
+			@Override
+			protected void done() {
+				super.done();
+				ihm.resetProgressBar();
+			}
+			
+		};
+		swingworker.execute();
+	}*/
+	
+	/*
+	public void importAsciiGrid(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
+		
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {	
+				ihm.start();
+				try{
+					File file = new File(ascii);
+					if(file.isFile()){
+						if(model.importAsciiGrid(matrix, ascii)){
+							panel.displayIhm(true);
+							return true;
+						}else{
+							
+							System.err.println("not possible to import this file : "+ascii+", try to clean it");
+							ihm.publish("not possible to import this file : "+ascii+", try to clean it");
+							model.cleanAsciiGrid(ascii);
+							if(model.importAsciiGrid(matrix, ascii)){
+								panel.displayIhm(true);
+								return true;
+							}else{
+								System.err.println("not possible to import this file : "+ascii);
+								ihm.publish("not possible to import this file : "+ascii);
+								return false;
+							}
+						}
+					}else{
+						for(File f : file.listFiles()){
+							if(f.isFile() && f.getName().endsWith(".asc")){
+								if(!model.importAsciiGrid(matrix, f.toString())){
+									ihm.publish("not possible to import this file : "+f.toString()+", try to clean it");
+									model.cleanAsciiGrid(f.toString());
+									if(!model.importAsciiGrid(matrix, f.toString())){
+										return false;
+									}
+								}
+							}
+						}
+						panel.displayIhm(false);
+						return true;
+					}
+				}catch(Exception ex){
+					ex.printStackTrace();
+					return false;
+				}
+			}
+			
+			@Override
+			protected void done() {
+				super.done();
+				ihm.resetProgressBar();
+			}
+			
+		};
+		swingworker.execute();
+	}*/
+	
+	/*
+	public void importAsciiGrid2(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
+		
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {	
+				ihm.start();
+				try{
+					File file = new File(ascii);
+					if(file.isFile()){
+						if(model.importAsciiGrid(matrix, ascii)){
+							panel.displayIhm2(ascii);
+							return true;
+						}else{
+							
+							System.err.println("not possible to import this file : "+ascii+", try to clean it");
+							ihm.publish("not possible to import this file : "+ascii+", try to clean it");
+							model.cleanAsciiGrid(ascii);
+							if(model.importAsciiGrid(matrix, ascii)){
+								panel.displayIhm2(ascii);
+								return true;
+							}else{
+								System.err.println("not possible to import this file : "+ascii);
+								ihm.publish("not possible to import this file : "+ascii);
+								return false;
+							}
+						}
+					}else{
+						throw new IllegalArgumentException();
+					}
+				}catch(Exception ex){
+					ex.printStackTrace();
+					return false;
+				}
+			}
+			
+			@Override
+			protected void done() {
+				super.done();
+				ihm.resetProgressBar();
+			}
+			
+		};
+		swingworker.execute();
+	}
+	*/
+	
+	/*
+	public void importAsciiGrid3(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
+		
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {	
+				ihm.start();
+				try{
+					File file = new File(ascii);
+					if(file.isFile()){
+						if(model.importAsciiGrid(matrix, ascii)){
+							panel.displayIhm3(ascii);
+							return true;
+						}else{
+							
+							System.err.println("not possible to import this file : "+ascii+", try to clean it");
+							ihm.publish("not possible to import this file : "+ascii+", try to clean it");
+							model.cleanAsciiGrid(ascii);
+							if(model.importAsciiGrid(matrix, ascii)){
+								panel.displayIhm3(ascii);
+								return true;
+							}else{
+								System.err.println("not possible to import this file : "+ascii);
+								ihm.publish("not possible to import this file : "+ascii);
+								return false;
+							}
+						}
+					}else{
+						throw new IllegalArgumentException();
+					}
+				}catch(Exception ex){
+					ex.printStackTrace();
+					return false;
+				}
+			}
+			
+			@Override
+			protected void done() {
+				super.done();
+				ihm.resetProgressBar();
+			}
+			
+		};
+		swingworker.execute();
+	}*/
+	
+	/*
+	public void importShapefile(final TreatmentPanel panel, final String inputShape, final Set<String> shapes) {
+		System.out.println("lancement de l'importation");
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {	
+				ihm.start();
+				try{
+					Map<String, String> attributes = new TreeMap<String, String>();
+					File f = new File(inputShape);
+					if(f.isDirectory()){
+						double[] totalenvelope = new double[4];
+						totalenvelope[0] = Double.MAX_VALUE;
+						totalenvelope[1] = Double.MIN_VALUE;
+						totalenvelope[2] = Double.MAX_VALUE;
+						totalenvelope[3] = Double.MIN_VALUE;
+						for(String file : f.list()){
+							if(file.endsWith(".shp")){
+								double[] envelope = new double[4];
+								model.getAttributesAndEnvelopeFromShapefile(inputShape+"/"+file, attributes, envelope);
+								shapes.add(inputShape+"/"+file);
+								totalenvelope[0] = Math.min(totalenvelope[0], envelope[0]);
+								totalenvelope[1] = Math.max(totalenvelope[1], envelope[1]);
+								totalenvelope[2] = Math.min(totalenvelope[2], envelope[2]);
+								totalenvelope[3] = Math.max(totalenvelope[3], envelope[3]);
+							}
+						}
+						panel.displayAttributes(inputShape, false, attributes, totalenvelope);
+						//panel.enabledImportation();
+						return true;
+					}else{
+						if(inputShape.endsWith(".shp")){
+							double[] envelope = new double[4];
+							model.getAttributesAndEnvelopeFromShapefile(inputShape, attributes, envelope);
+							shapes.add(inputShape);
+							panel.displayAttributes(inputShape, true, attributes, envelope);
+							//panel.enabledImportation();
+							return true;
+						}
+						return false;
+					}
+				}catch(Exception ex){
+					ex.printStackTrace();
+				}
+				return false;
+			}
+			
+			@Override
+			protected void done() {
+				super.done();
+				ihm.resetProgressBar();
+			}
+		};
+		swingworker.execute();
+	}*/
+	
+	/*
+	public void importXYCsv2(final TreatmentPanel panel, final String inputCsv, final Set<String> variables){
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {	
+				ihm.start();
+				try{
+					File fcsv = new File(inputCsv);
+					if(fcsv.isDirectory()){
+						for(String csv : fcsv.list()){
+							if(csv.endsWith(".csv")){
+								CsvReader cr = new CsvReader(inputCsv+"/"+csv);
+								cr.setDelimiter(';');
+								cr.readHeaders();
+								
+								for(String h : cr.getHeaders()){
+									if(!h.equalsIgnoreCase("X") && !h.equalsIgnoreCase("Y")){
+										variables.add(h);
+									}
+								}
+								cr.close();
+							}
+						}
+						panel.displayVariables(false);
+						panel.enabledIhm(false);
+						//panel.enabledImportation();
+					}else{
+						CsvReader cr = new CsvReader(inputCsv);
+						cr.setDelimiter(';');
+						cr.readHeaders();
+						for(String h : cr.getHeaders()){
+							if(!h.equalsIgnoreCase("X") && !h.equalsIgnoreCase("Y")){
+								variables.add(h);
+							}
+						}
+						cr.close();
+						panel.displayVariables(true);
+						panel.enabledIhm(true);
+						//panel.enabledImportation();
+					}
+					return true;
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (FinalizedException e1) {
+					e1.printStackTrace();
+				} catch (CatastrophicException e1) {
+					e1.printStackTrace();
+				}catch(Exception ex){
+					ex.printStackTrace();
+				}
+				return false;
+			}
+			
+			@Override
+			protected void done() {
+				super.done();
+				ihm.resetProgressBar();
+			}
+			
+		};
+		swingworker.execute();
+		
+	}
+	*/
+	
+	/*
+	public void importMapCsv(final TreatmentPanel panel, final String inputCsv, final Set<String> variables){
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {	
+				ihm.start();
+				try{
+					CsvReader cr = new CsvReader(inputCsv);
+					cr.setDelimiter(';');
+					cr.readHeaders();
+					for(String h : cr.getHeaders()){
+						if(!h.equalsIgnoreCase("id")){
+							variables.add(h);
+						}
+					}
+					cr.close();
+					panel.displayVMap();
+					return true;
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (FinalizedException e1) {
+					e1.printStackTrace();
+				} catch (CatastrophicException e1) {
+					e1.printStackTrace();
+				}catch(Exception ex){
+					ex.printStackTrace();
+				}
+				return false;
+			}
+			
+			@Override
+			protected void done() {
+				super.done();
+				ihm.resetProgressBar();
+			}
+			
+		};
+		swingworker.execute();
+		
+	}*/
 }

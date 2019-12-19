@@ -14,9 +14,9 @@ import fr.inra.sad.bagap.apiland.analysis.matrix.process.WindowMatrixProcessType
 import fr.inra.sad.bagap.apiland.analysis.matrix.process.metric.qualitative.basic.ValidValueMetric;
 import fr.inra.sad.bagap.apiland.analysis.matrix.window.WindowMatrixAnalysis;
 import fr.inra.sad.bagap.apiland.analysis.matrix.window.WindowMatrixAnalysisBuilder;
-import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.CenteredWindow;
 import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.FunctionalWindowWithMap;
-import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.Window;
+import fr.inra.sad.bagap.apiland.analysis.matrix.window.type.CenteredWindow;
+import fr.inra.sad.bagap.apiland.analysis.matrix.window.type.Window;
 import fr.inra.sad.bagap.apiland.analysis.window.WindowAnalysisType;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Pixel;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Raster;

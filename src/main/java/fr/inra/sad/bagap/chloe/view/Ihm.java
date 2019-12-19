@@ -10,11 +10,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Properties;
-
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
-
 import fr.inra.sad.bagap.chloe.controller.Controller;
 import fr.inra.sad.bagap.chloe.controller.LocalContext;
 import fr.inra.sad.bagap.chloe.view.treatment.TreatmentPanel;
@@ -22,6 +20,10 @@ import fr.inra.sad.bagap.chloe.view.wizard.Wizard;
 
 public class Ihm {
 
+	private String version = "4.0";
+	
+	private String beta = "beta35";
+	
 	private Controller controller;
 	
 	private JFrame frame;
@@ -63,9 +65,10 @@ public class Ihm {
 			
 			//frame.setExtendedState(frame.MAXIMIZED_BOTH);
 			//frame.setMinimumSize(new Dimension(1400, 850));
-			frame.setSize(new Dimension(1400, 850));
+			frame.setSize(new Dimension(1300, 900));
 			frame.setContentPane(getPanel());
-			frame.setTitle("Chloe");
+			//RefineryUtilities.centerFrameOnScreen(frame);
+			frame.setTitle("Chloe"+version+beta);
 			frame.addWindowListener(new WindowAdapter(){
 				@Override
 				public void windowClosing(WindowEvent e) {

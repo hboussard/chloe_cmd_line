@@ -261,7 +261,7 @@ public class TemporalSlidingWindowPanel extends TreatmentPanel {
 		windowSize = (Integer) spSize.getValue();
 		
 		if(cbShape.getSelectedItem().equals(WindowShapeType.FUNCTIONAL)){
-			if(frictionMatrix == null){
+			if(frictionMatrix.size() == 0){
 				friction = new Friction(taFriction.getText());
 			}
 		}else{

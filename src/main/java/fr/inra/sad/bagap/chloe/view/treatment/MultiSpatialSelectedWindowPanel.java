@@ -374,7 +374,7 @@ public class MultiSpatialSelectedWindowPanel extends TreatmentPanel {
 		}
 		
 		if(cbShape.getSelectedItem().equals(WindowShapeType.FUNCTIONAL)){
-			if(frictionMatrix == null){
+			if(frictionMatrix.size() == 0){
 				friction = new Friction(taFriction.getText());
 			}
 		}else{

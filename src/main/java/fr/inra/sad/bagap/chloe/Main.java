@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,8 +16,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+
 import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.WindowShapeType;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Pixel;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.Raster;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.RefPoint;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.CoordinateManager;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Friction;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Matrix;
@@ -29,6 +34,9 @@ import fr.inra.sad.bagap.chloe.view.treatment.ClassificationPanel;
 
 public class Main {
 
+	//62012
+	//C:/Hugues/formation/EcoPaysage/session_11-12-19/paysage_87/test/params_test1.properties
+	
 	public static void main(String[] args) {
 		if(args[0].equalsIgnoreCase("62012")){
 			launchGUI(args[0]);
@@ -65,7 +73,8 @@ public class Main {
 		Model model = new Model();
 		try{
 			Properties properties = new Properties();
-			FileInputStream in = new FileInputStream(file);
+	        Reader in = new InputStreamReader(new FileInputStream(file), "UTF8");
+			//FileInputStream in = new FileInputStream(file);
 			properties.load(in);
 			in.close();
 			if(properties.containsKey("treatment")){
@@ -78,7 +87,7 @@ public class Main {
 				case "distance" : launchDistance(model, properties); break;
 				case "classification" : launchClassification(model, properties); break;
 				case "cluster" : launchCluster(model, properties); break;
-				//case "combine" : launchCombine(model, properties); break; // a developper
+				case "combine" : launchCombine(model, properties); break; 
 				case "filter" : launchFilter(model, properties); break;
 				case "map" : launchMap(model, properties); break;
 				case "grid" : launchGrid(model, properties); break;
@@ -96,7 +105,7 @@ public class Main {
 	}
 	
 	private static void launchFromCsv(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'exportAsciiGridFromCsv()'");
+		//System.out.println("##chloe - appel de la fonction 'exportAsciiGridFromCsv()'");
 		try {
 			String inputCsv = importInputCsv(properties);
 			Set<String> variables = importVariables(properties);
@@ -122,7 +131,7 @@ public class Main {
 	}
 
 	private static void launchFromShapefile(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'exportAsciiGridFromShapefile()'");
+		//System.out.println("##chloe - appel de la fonction 'exportAsciiGridFromShapefile()'");
 		try {
 			Set<String> layers = importInputShapefile(properties);
 			String attribute = importAttribute(properties);
@@ -148,7 +157,7 @@ public class Main {
 	}
 
 	private static void launchSearchAndReplace(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runSearchAndReplace()'");
+		//System.out.println("##chloe - appel de la fonction 'runSearchAndReplace()'");
 		try {
 			Set<String> asciis = importInputAscii(properties);
 			int nodatavalue = importNoDataValue(properties);
@@ -169,17 +178,17 @@ public class Main {
 	}
 
 	private static void launchOverlay(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runOverlay()'");
+		//System.out.println("##chloe - appel de la fonction 'runOverlay()'");
 		try {
 			List<Matrix> matrix = importOverlayingMatrix(model, properties);
 			String folder = null;
 			String outputAsc = null;
 			if(properties.containsKey("output_folder")){
-				folder = importOutputFolder(properties);
+				folder = importOutputFolder2(properties);
 			}else{
-				outputAsc = importOutputAscii(properties);
+				outputAsc = importOutputAscii2(properties);
 			}
-			boolean viewAscii = importVisualizeAscii(properties);
+			boolean viewAscii = importVisualizeAscii2(properties);
 			
 			model.runOverlay(true, matrix, folder, outputAsc, viewAscii);
 		} catch (NoParameterException e) {
@@ -188,10 +197,14 @@ public class Main {
 	}
 
 	private static void launchDistance(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runDistance()'");
+		//System.out.println("##chloe - appel de la fonction 'runDistance()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			Set<Integer> distances = importDistances(properties);
+			String distanceType = importDistanceType(properties);
+			double maxDistance = importMaxDistance(properties);
+			Friction friction = importDistanceFriction(properties);
+			Matrix frictionMatrix =  importDistanceFrictionMatrix(model, properties);
 			String folder = null;
 			String outputAsc = null;
 			if(properties.containsKey("output_folder")){
@@ -201,14 +214,14 @@ public class Main {
 			}
 			boolean viewAscii = importVisualizeAscii(properties);
 			
-			model.runDistance(true, matrix, distances, folder, outputAsc, viewAscii);
+			model.runDistance(true, matrix, distances, distanceType, maxDistance, friction, frictionMatrix, folder, outputAsc, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchClassification(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runClassification()'");
+		//System.out.println("##chloe - appel de la fonction 'runClassification()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			Map<Domain<Double, Double>, Integer> domains = importDomains(properties);
@@ -228,14 +241,15 @@ public class Main {
 	}
 
 	private static void launchCluster(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runCluster()'");
+		//System.out.println("##chloe - appel de la fonction 'runCluster()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
-			Set<Integer> clusters = importCluster(properties);
+			List<Integer> clusters = importCluster(properties);
 			String typeCluster = importClusterType(properties);
 			double distance = importClusterDistance(properties);
 			Friction friction = importClusterFriction(properties);
 			Matrix frictionMatrix =  importClusterFrictionMatrix(model, properties);
+			
 			String folder = null;
 			String outputAsc = null;
 			if(properties.containsKey("output_folder")){
@@ -244,15 +258,38 @@ public class Main {
 				outputAsc = importOutputAscii(properties);
 			}
 			boolean viewAscii = importVisualizeAscii(properties);
+			double minimumTotalArea = importMinimumTotalArea(properties);
 			
-			model.runCluster(true, matrix, clusters, typeCluster, distance, friction, frictionMatrix, folder, outputAsc, viewAscii);
+			model.runCluster(true, matrix, clusters, typeCluster, distance, minimumTotalArea, friction, frictionMatrix, folder, outputAsc, viewAscii);
+		} catch (NoParameterException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void launchCombine(Model model, Properties properties) {
+		//System.out.println("##chloe - appel de la fonction 'runCombine()'");
+		try {
+			List<Matrix> matrix = importFactorsMatrix(model, properties);
+			List<String> names = importFactorsNames(model, properties);
+			String combination = importCombination(model, properties);
+			
+			String folder = null;
+			String outputAsc = null;
+			if(properties.containsKey("output_folder")){
+				folder = importOutputFolder3(properties);
+			}else{
+				outputAsc = importOutputAscii3(properties);
+			}
+			boolean viewAscii = importVisualizeAscii3(properties);
+			
+			model.runCombine(matrix, names, combination, folder, outputAsc, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchFilter(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runFilter()'");
+		//System.out.println("##chloe - appel de la fonction 'runFilter()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			Matrix filterMatrix = importFilterAscii(model, properties);
@@ -273,7 +310,7 @@ public class Main {
 	}
 
 	private static void launchMap(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runMapWindow()'");
+		//System.out.println("##chloe - appel de la fonction 'runMapWindow()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			Set<String> metrics = importMetrics(properties);
@@ -286,7 +323,7 @@ public class Main {
 	}
 
 	private static void launchGrid(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runGridWindow()'");
+		//System.out.println("##chloe - appel de la fonction 'runGridWindow()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			List<Integer> gridSizes = importGridSizes(properties);
@@ -314,7 +351,7 @@ public class Main {
 	}
 
 	private static void launchSliding(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runSlidingWindow()'");
+		//System.out.println("##chloe - appel de la fonction 'runSlidingWindow()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			WindowShapeType shape = importShape(properties);
@@ -323,8 +360,11 @@ public class Main {
 			List<Integer> windowSizes = importWindowSizes(properties);
 			double minRate = importMaximumNoValueRate(properties);
 			int delta = importDeltaDisplacement(properties);
+			int xOrigin = importXOrigin(properties);
+			int yOrigin = importYOrigin(properties);
 			boolean interpolate = importInterpolation(properties);
 			Set<String> metrics = importMetrics(properties);
+			String distanceFunction = importDistanceFunction(properties);
 			
 			String folder = null;
 			String outputAsc = null;
@@ -342,14 +382,14 @@ public class Main {
 			Set<Integer> filters = importFilters(properties);
 			Set<Integer> unfilters = importUnfilters(properties);
 			
-			model.runSlidingWindow(true, matrix, shape, friction, frictionMatrix, windowSizes, delta, interpolate, minRate, metrics, folder, outputAsc, outputCsv, viewAscii, exportCsv, exportAscii, filters, unfilters);
+			model.runSlidingWindow(true, matrix, shape, friction, frictionMatrix, windowSizes, distanceFunction, delta, xOrigin, yOrigin, interpolate, minRate, metrics, folder, outputAsc, outputCsv, viewAscii, exportCsv, exportAscii, filters, unfilters);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void launchSelected(Model model, Properties properties) {
-		System.out.println("##chloe - appel de la fonction 'runSelectedWindow()'");
+		//System.out.println("##chloe - appel de la fonction 'runSelectedWindow()'");
 		try {
 			Set<Matrix> matrix = importInputMatrix(model, properties);
 			WindowShapeType shape = importShape(properties);
@@ -358,7 +398,9 @@ public class Main {
 			double minRate = importMaximumNoValueRate(properties);
 			List<Integer> windowSizes = importWindowSizes(properties);
 			Set<Pixel> pixels = importPixels(matrix, properties);
+			Set<RefPoint> points = importPoints(properties);
 			Set<String> metrics = importMetrics(properties);
+			String distanceFunction = importDistanceFunction(properties);
 			
 			String folder = null;
 			String outputAsc = null;
@@ -374,7 +416,7 @@ public class Main {
 			boolean exportCsv = importExportCsv(properties);
 			boolean exportAscii = importExportAscii(properties);
 			
-			model.runSelectedWindow(true, matrix, minRate, shape, friction, frictionMatrix, windowSizes, pixels, metrics, folder, outputAsc, outputCsv, viewAscii, exportCsv, exportAscii);
+			model.runSelectedWindow(true, matrix, minRate, shape, friction, frictionMatrix, windowSizes, distanceFunction, pixels, points, metrics, folder, outputAsc, outputCsv, viewAscii, exportCsv, exportAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
@@ -461,6 +503,22 @@ public class Main {
 	}
 	
 	// required 
+	public static String importOutputFolder2(Properties properties) throws NoParameterException {
+		if(properties.containsKey("output_folder")){
+			return properties.getProperty("output_folder")+"/";
+		}
+		throw new NoParameterException("output_folder");
+	}
+	
+	// required 
+	public static String importOutputFolder3(Properties properties) throws NoParameterException {
+		if(properties.containsKey("output_folder")){
+			return properties.getProperty("output_folder")+"/";
+		}
+		throw new NoParameterException("output_folder");
+	}
+	
+	// required 
 	/*
 	public static String importOutputName(Properties properties) throws NoParameterException {
 		if(properties.containsKey("output_name")){
@@ -477,6 +535,22 @@ public class Main {
 		}
 		throw new NoParameterException("output_asc");
 	}
+	
+	// required 
+	public static String importOutputAscii2(Properties properties) throws NoParameterException {
+		if(properties.containsKey("output_asc")){
+			return properties.getProperty("output_asc");
+		}
+		throw new NoParameterException("output_asc");
+	}
+	
+	// required 
+	public static String importOutputAscii3(Properties properties) throws NoParameterException {
+		if(properties.containsKey("output_asc")){
+			return properties.getProperty("output_asc");
+		}
+		throw new NoParameterException("output_asc");
+	}
 		
 	// required 
 	public static String importOutputCsv(Properties properties) throws NoParameterException {
@@ -488,6 +562,22 @@ public class Main {
 	
 	// required
 	public static boolean importVisualizeAscii(Properties properties) throws NoParameterException {
+		if(properties.containsKey("visualize_ascii")){
+			return Boolean.parseBoolean(properties.getProperty("visualize_ascii"));
+		}
+		throw new NoParameterException("visualize_ascii");
+	}
+	
+	// required
+	public static boolean importVisualizeAscii2(Properties properties) throws NoParameterException {
+		if(properties.containsKey("visualize_ascii")){
+			return Boolean.parseBoolean(properties.getProperty("visualize_ascii"));
+		}
+		throw new NoParameterException("visualize_ascii");
+	}
+	
+	// required
+	public static boolean importVisualizeAscii3(Properties properties) throws NoParameterException {
 		if(properties.containsKey("visualize_ascii")){
 			return Boolean.parseBoolean(properties.getProperty("visualize_ascii"));
 		}
@@ -526,6 +616,13 @@ public class Main {
 	public static String importLookupTable(Properties properties) throws NoParameterException {
 		if(properties.containsKey("lookup_table")){
 			return properties.getProperty("lookup_table");
+		}
+		return "";
+	}
+	
+	public static String importDistanceFunction(Properties properties) throws NoParameterException {
+		if(properties.containsKey("distance_function")){
+			return properties.getProperty("distance_function");
 		}
 		return "";
 	}
@@ -607,15 +704,56 @@ public class Main {
 			if(f.isDirectory()){
 				for(String c : f.list()){
 					if(c.endsWith(".asc")){
-						model.importAsciiGrid(matrix, f+"/"+c);
+						model.importAsciiGrid(matrix, f+"/"+c, false);
 					}
 				}
 			}else{
-				model.importAsciiGrid(matrix, prop);
+				model.importAsciiGrid(matrix, prop, false);
 			}
 			return matrix;
 		}
 		throw new NoParameterException("input_ascii");
+	}
+	
+	// required 
+	public static List<Matrix> importFactorsMatrix(Model model, Properties properties) throws NoParameterException {
+		if(properties.containsKey("factors")){
+			String prop = properties.getProperty("factors").replace("{", "").replace("}", "");
+			String[] ds = prop.split(";");
+			List<Matrix> matrix = new ArrayList<Matrix>();
+			for(String d : ds){
+				d = d.replace("(", "").replace(")", "");
+				String[] dd = d.split(",");
+				model.importAsciiGrid(matrix, dd[0], false);
+			}
+			return matrix;
+		}
+		throw new NoParameterException("factors");
+	}
+	
+	// required 
+	public static List<String> importFactorsNames(Model model, Properties properties) throws NoParameterException {
+		if(properties.containsKey("factors")){
+			String prop = properties.getProperty("factors").replace("{", "").replace("}", "");
+			String[] ds = prop.split(";");
+			List<String> names = new ArrayList<String>();
+			for(String d : ds){
+				d = d.replace("(", "").replace(")", "");
+				String[] dd = d.split(",");
+				names.add(dd[1]);
+			}
+			return names;
+		}
+		throw new NoParameterException("factors");
+	}
+	
+	// required 
+	private static String importCombination(Model model, Properties properties) throws NoParameterException {
+		if(properties.containsKey("combination")){
+			String combination = properties.getProperty("combination");
+			return combination;
+		}
+		throw new NoParameterException("combination");
 	}
 	
 	// required 
@@ -643,7 +781,7 @@ public class Main {
 			String[] ms = prop.split(";");
 			List<Matrix> inputMatrix = new ArrayList<Matrix>();
 			for(String m : ms){
-				model.importAsciiGrid(inputMatrix, m);
+				model.importAsciiGrid(inputMatrix, m, false);
 			}
 			return inputMatrix;
 		}
@@ -663,6 +801,53 @@ public class Main {
 		}
 		throw new NoParameterException("distance_from");
 	}
+
+	
+	// not required
+	public static String importDistanceType(Properties properties) throws NoParameterException {
+		if(properties.containsKey("distance_type")){
+			return properties.getProperty("distance_type");
+		}
+		return "euclidian";
+	}
+	
+	// not required
+	public static double importMaxDistance(Properties properties) throws NoParameterException {
+		if(properties.containsKey("max_distance")){
+			return Double.parseDouble(properties.getProperty("max_distance"));
+		}
+		return Raster.getNoDataValue();
+	}
+	
+	// not required
+	public static Friction importDistanceFriction(Properties properties) throws NoParameterException {
+		if(properties.containsKey("distance_friction")){
+			String prop = properties.getProperty("distance_friction");
+			if(!prop.endsWith(".asc")){
+				return new Friction(prop);
+			}
+		}
+		return null;
+	}
+	
+	// not required
+	public static Matrix importDistanceFrictionMatrix(Model model, Properties properties) throws NoParameterException {
+		if(properties.containsKey("distance_friction_ascii")){
+			String prop = properties.getProperty("distance_friction_ascii");
+			Matrix frictionMatrix = null;
+			frictionMatrix = model.importAsciiGrid(frictionMatrix, prop, false);
+			return frictionMatrix;
+		}
+		if(properties.containsKey("distance_friction")){
+			String prop = properties.getProperty("distance_friction");
+			if(prop.endsWith(".asc")){
+				Matrix frictionMatrix = null;
+				frictionMatrix = model.importAsciiGrid(frictionMatrix, prop, false);
+				return frictionMatrix;
+			}
+		}
+		return null;
+	}	
 	
 	// required
 	public static Map<Domain<Double, Double>, Integer> importDomains(Properties properties) throws NoParameterException {
@@ -681,11 +866,11 @@ public class Main {
 	}
 	
 	// required
-	public static Set<Integer> importCluster(Properties properties) throws NoParameterException {
+	public static List<Integer> importCluster(Properties properties) throws NoParameterException {
 		if(properties.containsKey("cluster")){
 			String prop = properties.getProperty("cluster").replace("{", "").replace("}", "");
 			String[] df = prop.split(";");
-			Set<Integer> clusters = new HashSet<Integer>();
+			List<Integer> clusters = new ArrayList<Integer>();
 			for(String d : df){
 				clusters.add(Integer.parseInt(d));
 			}
@@ -711,9 +896,20 @@ public class Main {
 	}
 	
 	// not required
+	private static double importMinimumTotalArea(Properties properties) {
+		if(properties.containsKey("minimum_total_area")){
+			return Double.parseDouble(properties.getProperty("minimum_total_area"));
+		}
+		return 0;
+	}
+
+	// not required
 	public static Friction importClusterFriction(Properties properties) throws NoParameterException {
 		if(properties.containsKey("cluster_friction")){
-			return new Friction(properties.getProperty("cluster_friction"));
+			String prop = properties.getProperty("cluster_friction");
+			if(!prop.endsWith(".asc")){
+				return new Friction(prop);
+			}
 		}
 		return null;
 	}
@@ -723,8 +919,16 @@ public class Main {
 		if(properties.containsKey("cluster_friction_ascii")){
 			String prop = properties.getProperty("cluster_friction_ascii");
 			Matrix frictionMatrix = null;
-			frictionMatrix = model.importAsciiGrid(frictionMatrix, prop);
+			frictionMatrix = model.importAsciiGrid(frictionMatrix, prop, false);
 			return frictionMatrix;
+		}
+		if(properties.containsKey("cluster_friction")){
+			String prop = properties.getProperty("cluster_friction");
+			if(prop.endsWith(".asc")){
+				Matrix frictionMatrix = null;
+				frictionMatrix = model.importAsciiGrid(frictionMatrix, prop, false);
+				return frictionMatrix;
+			}
 		}
 		return null;
 	}
@@ -734,7 +938,7 @@ public class Main {
 		if(properties.containsKey("ascii_filter")){
 			String prop = properties.getProperty("ascii_filter");
 			Matrix filterMatrix = null;
-			filterMatrix = model.importAsciiGrid(filterMatrix, prop);
+			filterMatrix = model.importAsciiGrid(filterMatrix, prop, false);
 			return filterMatrix;
 		}
 		throw new NoParameterException("ascii_filter");
@@ -819,7 +1023,10 @@ public class Main {
 	// not required
 	public static Friction importFriction(Properties properties) throws NoParameterException {
 		if(properties.containsKey("friction")){
-			return  new Friction(properties.getProperty("friction"));
+			String prop = properties.getProperty("friction");
+			if(!prop.endsWith(".asc")){
+				return  new Friction(prop);
+			}
 		}
 		return null;
 	}
@@ -829,8 +1036,16 @@ public class Main {
 		if(properties.containsKey("friction_ascii")){
 			String prop = properties.getProperty("friction_ascii");
 			Matrix frictionMatrix = null;
-			frictionMatrix = model.importAsciiGrid(frictionMatrix, prop);
+			frictionMatrix = model.importAsciiGrid(frictionMatrix, prop, false);
 			return frictionMatrix;
+		}
+		if(properties.containsKey("friction")){
+			String prop = properties.getProperty("friction");
+			if(prop.endsWith(".asc")){
+				Matrix frictionMatrix = null;
+				frictionMatrix = model.importAsciiGrid(frictionMatrix, prop, false);
+				return frictionMatrix;
+			}
 		}
 		return null;
 	}
@@ -856,6 +1071,22 @@ public class Main {
 			return Integer.parseInt(properties.getProperty("delta_displacement"));
 		}
 		throw new NoParameterException("delta_displacement");
+	}
+	
+	// not required
+	public static int importXOrigin(Properties properties) throws NoParameterException {
+		if(properties.containsKey("x_origin")){
+			return Integer.parseInt(properties.getProperty("x_origin"));
+		}
+		return 0;
+	}
+	
+	// not required
+	public static int importYOrigin(Properties properties) throws NoParameterException {
+		if(properties.containsKey("y_origin")){
+			return Integer.parseInt(properties.getProperty("y_origin"));
+		}
+		return 0;
 	}
 	
 	// not required
@@ -900,9 +1131,6 @@ public class Main {
 		if(properties.containsKey("pixels")){
 			String prop = properties.getProperty("pixels");
 			pixels = CoordinateManager.initWithPixels(prop);
-		}else if(properties.containsKey("points")){
-			String prop = properties.getProperty("points");
-			pixels = CoordinateManager.initWithPoints(matrix.iterator().next(), prop);
 		}else if(properties.containsKey("number_generated_pixels")){
 			String prop = properties.getProperty("pixels");
 			int n = Integer.parseInt(prop);
@@ -940,7 +1168,20 @@ public class Main {
 				ex.printStackTrace();
 			}
 		}
+		
+		if(pixels.size() == 0){
+			pixels = null;
+		}
+		
 		return pixels;
+	}
+	
+	public static Set<RefPoint> importPoints(Properties properties) throws NoParameterException {
+		if(properties.containsKey("points")){
+			String prop = properties.getProperty("points");
+			return CoordinateManager.initWithPoints(prop);
+		}
+		return null;
 	}
 	
 }

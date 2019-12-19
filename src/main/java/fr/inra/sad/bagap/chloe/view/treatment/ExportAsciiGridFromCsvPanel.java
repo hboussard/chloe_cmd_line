@@ -25,7 +25,7 @@ public class ExportAsciiGridFromCsvPanel extends TreatmentPanel {
 		title.setText("Generate Ascii Grid from Csv File");
 		
 		c = new GridBagConstraints();
-		c.insets = new Insets(5, 5, 5, 5);
+		c.insets = new Insets(5,2,5,2);
 		
 		c.gridx = 0;
 		c.gridy = 0;

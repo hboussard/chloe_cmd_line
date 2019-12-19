@@ -11,30 +11,32 @@ import java.util.Set;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Friction;
 import fr.inra.sad.bagap.chloe.view.wizard.Wizard;
 
-public class ClusterPanel extends TreatmentPanel {
+public class GroupPanel extends TreatmentPanel {
 
 	private static final long serialVersionUID = 1L;
 	
-	private List<Integer> vclusters;
+	private List<Integer> valuesClusters;
+	
+	private List<Double> minimumClusters;
+	
+	private double minimumTotal;
 	
 	private String typeCluster; 
 	
 	private double distance;
 	
-	private double minimumTotalArea;
-	
-	public ClusterPanel(Wizard wizard) {
+	public GroupPanel(Wizard wizard) {
 		super(wizard);
 	}
 	
 	@Override
 	public String toString(){
-		return "cluster";
+		return "group";
 	}
 	
 	@Override
 	protected void locateComponents(){
-		title.setText("Cluster");
+		title.setText("Group");
 		
 		c = new GridBagConstraints();
 		c.insets = new Insets(10, 10, 10, 10);
@@ -55,11 +57,11 @@ public class ClusterPanel extends TreatmentPanel {
 		c.gridy = 1;
 		c.anchor = GridBagConstraints.LINE_START;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.weightx = 3;
-		c.gridwidth = 3;
+		c.weightx = 4;
+		c.gridwidth = 4;
 		add(taAsciiInput, c);
 	
-		c.gridx = 4;
+		c.gridx = 5;
 		c.gridy = 1;
 		c.anchor = GridBagConstraints.CENTER;
 		c.fill = GridBagConstraints.NONE;
@@ -67,14 +69,14 @@ public class ClusterPanel extends TreatmentPanel {
 		c.gridwidth = 1;
 		add(bAsciiInput, c);
 		
-		c.gridx = 5;
+		c.gridx = 6;
 		c.gridy = 1;
 		add(bViewAsciiInput, c);
 		
 		c.gridx = 0;
 		c.gridy = 3;
 		c.anchor = GridBagConstraints.FIRST_LINE_END;
-		add(lClusters, c);
+		add(lHabitats, c);
 		
 		c.gridx = 1;
 		c.gridy = 3;
@@ -82,77 +84,106 @@ public class ClusterPanel extends TreatmentPanel {
 		c.fill = GridBagConstraints.NONE;
 		c.weighty = 0;
 		c.gridheight = 4;
-		add(pDistances, c);
+		add(pHabitats, c);
 		
 		c.gridx = 2;
 		c.gridy = 3;
 		c.gridheight = 1;
 		c.anchor = GridBagConstraints.FIRST_LINE_START;
-		c.anchor = GridBagConstraints.LINE_START;
-		add(rbRook, c);
+		//c.anchor = GridBagConstraints.LINE_START;
+		add(rbHabitatRook, c);
 		
 		c.gridx = 2;
 		c.gridy = 4;
-		add(rbQueen, c);
+		add(rbHabitatQueen, c);
 		
 		c.gridx = 2;
 		c.gridy = 5;
-		add(rbEuclidianCluster, c);
-		
-		c.gridx = 3;
-		c.gridy = 5;
-		add(spEuclidianCluster, c);
+		add(rbHabitatEuclidian, c);
 		
 		c.gridx = 2;
 		c.gridy = 6;
-		add(rbFunctionalCluster, c);
+		add(rbHabitatFunctional, c);
 		
-		c.gridx = 3;
-		c.gridy = 6;
-		add(spFunctionalCluster, c);
-		
-		c.gridx = 2;
+		c.gridx = 1;
 		c.gridy = 7;
 		c.anchor = GridBagConstraints.LINE_END;
 		add(lFrictionCluster, c);
 		
-		c.gridx = 3;
+		c.gridx = 2;
 		c.gridy = 7;
+		c.gridwidth = 3;
 		c.anchor = GridBagConstraints.LINE_START;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		add(taFrictionCluster, c);
 		
-		c.gridx = 4;
+		c.gridx = 5;
 		c.gridy = 7;
+		c.gridwidth = 1;
 		c.anchor = GridBagConstraints.LINE_START;
 		c.fill = GridBagConstraints.NONE;
 		add(bFrictionCluster, c);
 		
-		c.gridx = 0;
-		c.gridy = 8;
-		c.anchor = GridBagConstraints.LINE_END;
-		add(lMinimumTotalArea, c);
-		
 		c.gridx = 1;
 		c.gridy = 8;
-		c.anchor = GridBagConstraints.FIRST_LINE_START;
-		add(spMinimumTotalArea, c);
+		c.anchor = GridBagConstraints.LINE_END;
+		add(cbGlobalMinimumSurface, c);
+		
+		c.gridx = 2;
+		c.gridy = 8;
+		c.anchor = GridBagConstraints.LINE_START;
+		add(spGlobalMinimumSurface, c);
+		
+		c.gridx = 1;
+		c.gridy = 9;
+		c.anchor = GridBagConstraints.LINE_END;
+		add(cbGlobalMaximumSurface, c);
+		
+		c.gridx = 2;
+		c.gridy = 9;
+		c.anchor = GridBagConstraints.LINE_START;
+		add(spGlobalMaximumSurface, c);
 		
 		c.gridx = 0;
-		c.gridy = 9;
+		c.gridy = 10;
+		c.anchor = GridBagConstraints.LINE_END;
+		add(lHabitatDistance, c);
+		
+		c.gridx = 1;
+		c.gridy = 10;
+		c.anchor = GridBagConstraints.LINE_START;
+		add(spHabitatDistance, c);
+		
+		c.gridx = 0;
+		c.gridy = 12;
+		c.anchor = GridBagConstraints.FIRST_LINE_END;
+		add(lComplementaries, c);
+		
+		c.gridx = 1;
+		c.gridy = 12;
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		c.fill = GridBagConstraints.NONE;
+		c.weighty = 0;
+		c.gridheight = 4;
+		add(pComplementaries, c);
+		
+		
+		c.gridx = 0;
+		c.gridy = 20;
+		c.gridheight = 1;
 		c.anchor = GridBagConstraints.LINE_END;
 		add(lOutputFolder, c);
 		
 		c.gridx = 1;
-		c.gridy = 9;
+		c.gridy = 20;
 		c.anchor = GridBagConstraints.FIRST_LINE_START;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		c.gridwidth = 3;
+		c.gridwidth = 4;
 		add(taOutputFolder, c);
 		
-		c.gridx = 4;
-		c.gridy = 9;
+		c.gridx = 5;
+		c.gridy = 20;
 		c.anchor = GridBagConstraints.PAGE_START;
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
@@ -160,21 +191,27 @@ public class ClusterPanel extends TreatmentPanel {
 		add(bOutputFolder, c);
 		
 		c.gridx = 1;
-		c.gridy = 10;
+		c.gridy = 21;
+		c.weightx = 0;
 		c.weighty = 1;
 		c.anchor = GridBagConstraints.FIRST_LINE_START;
 		c.fill = GridBagConstraints.NONE;
 		add(viewAsciiOutput, c);
+		
 	}
 	
 	@Override
 	public boolean validateRun(List<String> list) {
 		boolean validate = true;
 		
-		vclusters = new ArrayList<Integer>();
+		valuesClusters = new ArrayList<Integer>();
+		minimumClusters = new ArrayList<Double>();
 		for(int r : tDistances.getSelectedRows()){
-			vclusters.add((Integer) tDistances.getModel().getValueAt(r, 0));
+			valuesClusters.add((Integer) tDistances.getModel().getValueAt(r, 0));
+			minimumClusters.add(0.0);
+			//minimumClusters.add(2.0);
 		}
+		minimumTotal = 0.0;
 		
 		if(rbRook.isSelected()){
 			typeCluster = "rook";
@@ -190,8 +227,6 @@ public class ClusterPanel extends TreatmentPanel {
 				clusterFriction = new Friction(taFrictionCluster.getText());
 			}
 		}
-		
-		minimumTotalArea = (Double) spMinimumTotalArea.getValue();		
 		
 		if(taOutputFolder.getText().equalsIgnoreCase("")){
 			 list.add("Please choose an ascci grid output matrix file");
@@ -209,7 +244,6 @@ public class ClusterPanel extends TreatmentPanel {
 		importClusterDistance(properties);
 		importClusterFriction(properties);
 		importClusterFrictionMatrix(properties);
-		importMinimumTotalArea(properties);
 		importOutputFolder(properties);
 		importVisualizeAscii(properties);
 	}
@@ -222,14 +256,13 @@ public class ClusterPanel extends TreatmentPanel {
 		exportClusterDistance(properties);
 		exportClusterFriction(properties);
 		exportClusterFrictionMatrix(properties);
-		exportMinimumTotalArea(properties);
 		exportOutputFolder(properties);
 		exportVisualizeAscii(properties);
 	}
 
 	@Override
 	public void run() {
-		getController().runCluster(inputMatrix, vclusters, typeCluster, distance, minimumTotalArea, clusterFriction, (clusterFrictionMatrix.size()==0)?null:clusterFrictionMatrix.iterator().next(), taOutputFolder.getText(), viewAsciiOutput.isSelected());
+		getController().runGroup(inputMatrix, valuesClusters, minimumClusters, minimumTotal, typeCluster, distance, clusterFriction, (clusterFrictionMatrix.size()==0)?null:clusterFrictionMatrix.iterator().next(), taOutputFolder.getText(), viewAsciiOutput.isSelected());
 	}
 
 }

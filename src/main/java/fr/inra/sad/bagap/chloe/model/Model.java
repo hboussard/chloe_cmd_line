@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+
 import org.geotools.data.shapefile.dbf.DbaseFileHeader;
 import org.geotools.data.shapefile.dbf.DbaseFileReader;
 import org.geotools.data.shapefile.files.ShpFiles;
@@ -28,14 +30,17 @@ import fr.inra.sad.bagap.apiland.analysis.Analysis;
 import fr.inra.sad.bagap.apiland.analysis.AnalysisObserver;
 import fr.inra.sad.bagap.apiland.analysis.AnalysisState;
 import fr.inra.sad.bagap.apiland.analysis.matrix.ChamferDistance;
-import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringAnalysis;
-import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringCsvOutput;
-import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringEuclidianDistanceAnalysis;
-import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringFunctionalDistanceAnalysis;
-import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringQueenAnalysis;
-import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringRookAnalysis;
+import fr.inra.sad.bagap.apiland.analysis.matrix.RCMDistanceCalculation;
+import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringDistanceAnalysis;
+import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringOutput;
+import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringRook;
+import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.GroupDistanceAnalysis;
+import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.NewClusteringQueenAnalysis;
+import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.NewClusteringRookAnalysis;
+import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringQueen;
 import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.Classification;
 import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.Pixel2PixelMatrixCalculation;
+import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.combination.CombinationExpressionFactory;
 import fr.inra.sad.bagap.apiland.analysis.matrix.util.AsciiGridManager;
 import fr.inra.sad.bagap.apiland.analysis.matrix.util.ExportAsciiGridFromShapefileAnalysis;
 import fr.inra.sad.bagap.apiland.analysis.matrix.util.SpatialCsvManager;
@@ -43,6 +48,7 @@ import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.WindowShapeType;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Pixel;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Raster;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.RasterManager;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.RefPoint;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.CoordinateManager;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Friction;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.JaiMatrixFactory;
@@ -67,7 +73,10 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 
 	public void setProgress(int progress) {
 		if(batch){
-			System.out.println("## "+progress+" / 100");
+			//System.out.println("## "+progress+" / 100");
+			if(progress%10 == 0){
+				System.out.println(progress+" ");
+			}
 		}else{
 			pcs.firePropertyChange(new PropertyChangeEvent(this, ACTION.PROGRESS.toString(), null, progress));
 		}
@@ -76,6 +85,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 	public void publish(String text) {
 		if(batch){
 			System.out.println("## "+text);
+			//System.out.print(text+" ");
 		}else{
 			pcs.firePropertyChange(new PropertyChangeEvent(this, ACTION.PUBLISH.toString(), "", text));
 		}
@@ -109,13 +119,14 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		progress++;
 		int gprogress = new Double((((double) progress) / total) * 100.0).intValue();
 		if(globalProgress != gprogress){
+		//if(gprogress - globalProgress >= 10){
 			globalProgress = gprogress;
 			setProgress(globalProgress);
 		}
 	}
 	
 	public boolean runSlidingWindow(boolean batch, Set<Matrix> inputMatrix, WindowShapeType shape, Friction friction, Matrix frictionMatrix,
-			List<Integer> windowSizes, int delta, boolean interpolate, double minRate, Set<String> metrics,
+			List<Integer> windowSizes, String distanceFunction, int delta, int xOrigin, int yOrigin, boolean interpolate, double minRate, Set<String> metrics,
 			String outputFolder, String outputAsc, String outputCsv, boolean viewAsciiOutput, boolean exportCsv, boolean exportAscii,
 			Set<Integer> filters, Set<Integer> unfilters) {
 		
@@ -127,11 +138,23 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			// settings
 			treatment.setInput("shape", shape);
 			treatment.setInput("delta", delta);
+			treatment.setInput("x_origin", xOrigin);
+			treatment.setInput("y_origin", yOrigin);
+			treatment.setInput("delta", delta);
 			treatment.setInput("interpolation", interpolate);
 			treatment.setInput("min_rate", minRate);
 			treatment.setInput("metrics", metrics);
 			treatment.setInput("filters", filters);
 			treatment.setInput("unfilters", unfilters);
+			
+			if(distanceFunction == null || distanceFunction.equalsIgnoreCase("")){
+				treatment.setInput("distance_type", false);
+				treatment.setInput("distance_function", "");
+			}else{
+				treatment.setInput("distance_type", true);
+				treatment.setInput("distance_function", distanceFunction);
+			}
+			
 			if(friction != null){
 				treatment.setInput("friction_map", friction);
 				//TranslateMatrixCalculation c = new TranslateMatrixCalculation(friction.getMap(), inputMatrix.iterator().next());
@@ -240,7 +263,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 	}
 
 	public boolean runSelectedWindow(boolean batch, Set<Matrix> inputMatrix, double minRate, WindowShapeType shape, Friction friction, Matrix frictionMatrix,
-			List<Integer> windowSizes, Set<Pixel> pixels, Set<String> metrics,
+			List<Integer> windowSizes, String distanceFunction, Set<Pixel> pixels, Set<RefPoint> points, Set<String> metrics,
 			String outputFolder, String outputAsc, String outputCsv, boolean viewAsciiOutput, boolean exportCsv, boolean exportAscii) {
 		
 		this.batch = batch;
@@ -252,12 +275,12 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			if(outputFolder != null){
 				treatment.setInput("path", outputFolder);	
 			}else{
-				treatment.setInput("path", new File(outputAsc).getParent());
+				treatment.setInput("path", new File(outputCsv).getParent());
 			}
 			
 			// settings
 			treatment.setInput("shape", shape);
-			treatment.setInput("pixels", pixels);
+			
 			treatment.setInput("metrics", metrics);
 			treatment.setInput("min_rate", minRate);
 			if(friction != null){
@@ -267,11 +290,30 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				treatment.setInput("friction_matrix", frictionMatrix);
 			}
 			
+			if(distanceFunction == null || distanceFunction.equalsIgnoreCase("")){
+				treatment.setInput("distance_type", false);
+				treatment.setInput("distance_function", "");
+			}else{
+				treatment.setInput("distance_type", true);
+				treatment.setInput("distance_function", distanceFunction);
+			}
+			
+			
 			if(shape == WindowShapeType.FUNCTIONAL){
 				for(Matrix matrix : inputMatrix){
 					String name = new File(matrix.getFile()).getName().replace(".asc", "");
 					
 					treatment.setInput("matrix", matrix);
+					
+					if(pixels != null){
+						treatment.setInput("pixels", pixels);
+					}else{
+						Set<Pixel> pix = new TreeSet<Pixel>();
+						for(RefPoint p : points){
+							pix.add(p.getPixel(matrix));
+						}
+						treatment.setInput("pixels", pix);
+					}
 					
 					for(int wsize : windowSizes){
 						
@@ -313,6 +355,16 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 					String name = new File(matrix.getFile()).getName().replace(".asc", "");
 					
 					treatment.setInput("matrix", matrix);
+					
+					if(pixels != null){
+						treatment.setInput("pixels", pixels);
+					}else{
+						Set<Pixel> pix = new TreeSet<Pixel>();
+						for(RefPoint p : points){
+							pix.add(p.getPixel(matrix));
+						}
+						treatment.setInput("pixels", pix);
+					}
 					
 					publish("treatment of the matrix "+name+" using window size = "+windowSizes);
 					treatment.addObserver(this);
@@ -488,12 +540,12 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean importAsciiGrid(Collection<Matrix> matrix, String ascii) {
+	public boolean importAsciiGrid(Collection<Matrix> matrix, String ascii, boolean read) {
 		try{
 			publish("import matrix "+ascii);
 			
 			//Matrix m = JaiMatrixFactory.get().createWithAsciiGrid(ascii);
-			Matrix m = JaiMatrixFactory.get().createWithAsciiGridOld(ascii, true);
+			Matrix m = JaiMatrixFactory.get().createWithAsciiGridOld(ascii, read);
 			
 			matrix.add(m);
 			
@@ -507,15 +559,19 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public Matrix importAsciiGrid(Matrix matrix, String ascii) {
+	public Matrix importAsciiGrid(Matrix matrix, String ascii, boolean read) {
 		try{
 			publish("import matrix "+ascii);
 			
 			//Matrix m = JaiMatrixFactory.get().createWithAsciiGrid(ascii);
-			Matrix m = JaiMatrixFactory.get().createWithAsciiGridOld(ascii, true);
+			Matrix m = JaiMatrixFactory.get().createWithAsciiGridOld(ascii, read);
+			//Matrix m = ArrayMatrixFactory.get().createWithAsciiGrid(ascii, true);
 			matrix = m;
 			
-			return matrix;
+			//System.out.println("ici");
+			
+			return m;
+			
 		} catch(NumberFormatException ex){
 			ex.printStackTrace();
 			return null;
@@ -698,7 +754,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			String name;
 			String ascii;
 			for(String layer : layers){
-				
+				layer = layer.replace(".SHP", ".shp");
 				name = new File(layer).getName().replace(".shp", ""); 
 				for(double cellsize : cellsizes){
 					if(outputAsc != null){
@@ -749,7 +805,8 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean runDistance(boolean batch, Set<Matrix> matrix, Set<Integer> values, String asciiOutput, String outputAsc, boolean viewAsciiOutput) {
+	public boolean runDistance(boolean batch, Set<Matrix> matrix, Set<Integer> values, String typeDistance, double distance, Friction friction, Matrix frictionMatrix, 
+			String outputFolder, String outputAsc, boolean viewAsciiOutput) {
 		this.batch = batch;
 		try{
 			for(Matrix m : matrix){	
@@ -758,10 +815,38 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				publish("distance calculation: "+m.getFile());
 				progress = 0;
 				
+				Matrix mDistance = null;
+				switch(typeDistance){
+				case "euclidian" : 
+					ChamferDistance cd = new ChamferDistance(m, values, distance);
+					cd.addObserver(this);
+					mDistance = cd.allRun();
+					break;
+				case "functional" : 
+					RCMDistanceCalculation rcm = null;
+					if(friction != null){
+						rcm = new RCMDistanceCalculation(m, friction, values, distance);
+					}else{
+						rcm = new RCMDistanceCalculation(m, frictionMatrix, values, distance);
+					}
+					rcm.addObserver(this);
+					mDistance = rcm.allRun();
+					break;
+				}
+				
+				/*
+				RCMDistanceCalculation rcm = new RCMDistanceCalculation(m, friction, values);
+				rcm.addObserver(this);
+				Matrix m2 = rcm.allRun();
+				
+				
 				ChamferDistance cd = new ChamferDistance(m, values);
 				cd.addObserver(this);
 				Matrix m2 = cd.allRun();
+				*/
 				
+				//MatrixManager.exportAsciiGrid(m2, asciiOutput+"/"+name+"_dist1-"+values+".asc");
+				/*
 				publish("normalize the distance matrix");
 				progress = 0;
 				Pixel2PixelMatrixCalculation pp = new Pixel2PixelMatrixCalculation(m, m2){
@@ -775,11 +860,11 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				};
 				pp.addObserver(this);
 				Matrix m3 = pp.allRun();
-				
+				*/
 				if(outputAsc != null){
-					MatrixManager.exportAsciiGrid(m3, outputAsc);
+					MatrixManager.exportAsciiGrid(mDistance, outputAsc);
 				}else{
-					MatrixManager.exportAsciiGrid(m3, asciiOutput+"/"+name+"_dist-"+values+".asc");
+					MatrixManager.exportAsciiGrid(mDistance, outputFolder+"/"+name+"_dist-"+values+".asc");
 				}
 				
 				
@@ -789,7 +874,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				if(outputAsc != null){
 					MatrixManager.visualize(outputAsc);
 				}else{
-					MatrixManager.visualize(asciiOutput);	
+					MatrixManager.visualize(outputFolder);	
 				}
 			}
 			
@@ -812,6 +897,9 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 					@Override
 					protected double treatPixel(Pixel p) {
 						double f = matrix(1).get(p);
+						if(f == Raster.getNoDataValue()){
+							return Raster.getNoDataValue();
+						}
 						for(int v : values){
 							if(v == f){
 								return matrix(0).get(p);
@@ -931,34 +1019,30 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean runCombine(List<Matrix> matrix, List<Double> factors, String asciiOutput, boolean viewAsciiOutput){
+	public boolean runCombine(List<Matrix> matrix, List<String> names, String formula, String asciiOutput, String outputAsc, boolean viewAsciiOutput){
 		try {
 			progress = 0;
 			String name = "combine";
 			publish("combine");
 			Matrix[] m = matrix.toArray(new Matrix[matrix.size()]);
-			Pixel2PixelMatrixCalculation ppm = new Pixel2PixelMatrixCalculation(m){
-				@Override
-				protected double treatPixel(Pixel p) {
-					double value = 0.0;
-					int index = 0;
-					for(Matrix m : wholeMatrix()){
-						double v = m.get(p);
-						if(v == Raster.getNoDataValue()){
-							return Raster.getNoDataValue();
-						}
-						value += v * factors.get(index);
-						index++;
-					}
-					return value;
-				}
-			};
-			ppm.addObserver(this);
-			Matrix mo = ppm.allRun();
-			MatrixManager.exportAsciiGrid(mo, asciiOutput+"/"+name+".asc");
+			String[] n = names.toArray(new String[names.size()]);
+			
+			Pixel2PixelMatrixCalculation ppmc = CombinationExpressionFactory.createPixel2PixelMatrixCalculation(formula, n, m);
+			ppmc.addObserver(this);
+			Matrix mo = ppmc.allRun();
+			
+			if(outputAsc != null){
+				MatrixManager.exportAsciiGrid(mo, outputAsc);
+			}else{
+				MatrixManager.exportAsciiGrid(mo, asciiOutput+"/"+name+".asc");
+			}
 			
 			if(viewAsciiOutput){
-				MatrixManager.visualize(asciiOutput+"/"+name+".asc");
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(asciiOutput);	
+				}
 			}
 			
 			return true;
@@ -968,22 +1052,275 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean runCluster(boolean batch, Set<Matrix> matrix, Set<Integer> values, String typeCluster, double distance, Friction friction, Matrix frictionMatrix, 
-			/*boolean sameType, boolean sameMap,*/ String asciiOutput, String outputAsc, boolean viewAsciiOutput){
+	public boolean runCluster(boolean batch, Set<Matrix> matrix, List<Integer> values, String typeCluster, double distance, 
+			double minimumTotalArea, Friction friction, Matrix frictionMatrix, 
+			/*boolean sameType, boolean sameMap,*/ String outputFolder, String outputAscii, boolean viewAsciiOutput){
 		this.batch = batch;
 		try {
-			String name = "cluster";
 			
 			for(Matrix m : matrix){
+				
+				String mName = new File(m.getFile()).getName().replace(".asc", "");
+				
 				progress = 0;
-				String suf = new File(m.getFile()).getName().replace(".asc", "");
-				publish("cluster : "+suf);
-				ClusteringAnalysis ca = null;
+				publish("cluster : "+mName+" using "+typeCluster);
+				Analysis ca = null;
+				
+				double[] distances = new double[1];
+				distances[0] = distance;
+				
+				List<Double> minimumAreas = new ArrayList<Double>();
+				for(int value : values){
+					minimumAreas.add(0.0);
+				}
+				//double minimumTotal = 0.0;
 				
 				switch(typeCluster){
-				case "rook" : ca = new ClusteringRookAnalysis(m, values); break;
-				case "queen" : ca = new ClusteringQueenAnalysis(m, values); break;
-				case "euclidian" : ca = new ClusteringEuclidianDistanceAnalysis(m, distance, values); break;
+				/*
+				case "rook" :
+					ca = new ClusteringRookAnalysis(m, values);
+					if(outputAscii != null){
+						ca.addObserver(new ClusteringCsvOutput(outputAscii.replace(".asc", "")+".csv"));
+					}else{
+						ca.addObserver(new ClusteringCsvOutput(outputFolder+"/cluster_"+mName+"_rook.csv"));
+					}
+					ca.addObserver(this);
+					
+					Raster rrook = (Raster) ca.allRun();
+					Matrix mrook = RasterManager.exportMatrix(rrook, m);
+					Pixel2PixelMatrixCalculation ppmcrook = new Pixel2PixelMatrixCalculation(m, mrook){
+						@Override
+						protected double treatPixel(Pixel p) {
+							double v = mrook.get(p);
+							if(v != Raster.getNoDataValue()){
+								return v;
+							}
+							if(m.get(p) != Raster.getNoDataValue()){
+								return 0;
+							}
+							return Raster.getNoDataValue();
+						}
+					};
+					if(outputAscii != null){
+						MatrixManager.exportAsciiGrid(ppmcrook.allRun(), outputAscii);
+					}else{
+						MatrixManager.exportAsciiGrid(ppmcrook.allRun(), outputFolder+"/cluster_"+mName+"_rook.asc");
+					}
+					break;
+				case "queen" :
+					ca = new ClusteringQueenAnalysis(m, values);
+					if(outputAscii != null){
+						ca.addObserver(new ClusteringCsvOutput(outputAscii.replace(".asc", "")+".csv"));
+					}else{
+						ca.addObserver(new ClusteringCsvOutput(outputFolder+"/cluster_"+mName+"_queen.csv"));
+					}
+					ca.addObserver(this);
+					
+					Raster rqueen = (Raster) ca.allRun();
+					Matrix mqueen = RasterManager.exportMatrix(rqueen, m);
+					Pixel2PixelMatrixCalculation ppmcqueen = new Pixel2PixelMatrixCalculation(m, mqueen){
+						@Override
+						protected double treatPixel(Pixel p) {
+							double v = mqueen.get(p);
+							if(v != Raster.getNoDataValue()){
+								return v;
+							}
+							if(m.get(p) != Raster.getNoDataValue()){
+								return 0;
+							}
+							return Raster.getNoDataValue();
+						}
+					};
+					if(outputAscii != null){
+						MatrixManager.exportAsciiGrid(ppmcqueen.allRun(), outputAscii);
+					}else{
+						MatrixManager.exportAsciiGrid(ppmcqueen.allRun(), outputFolder+"/cluster_"+mName+"_queen.asc");
+					}
+					break;
+					*/
+				/*
+				case "rook" :
+					ca = new NewClusteringRookAnalysis(m, values, null, -1, outputFolder, mName+"_rook");
+		
+					ca.addObserver(this);
+					
+					Raster rrook = (Raster) ca.allRun();
+					Matrix mrook = RasterManager.exportMatrix(rrook, m);
+					Pixel2PixelMatrixCalculation ppmcrook = new Pixel2PixelMatrixCalculation(m, mrook){
+						@Override
+						protected double treatPixel(Pixel p) {
+							double v = mrook.get(p);
+							if(v != Raster.getNoDataValue()){
+								return v;
+							}
+							if(m.get(p) != Raster.getNoDataValue()){
+								return 0;
+							}
+							return Raster.getNoDataValue();
+						}
+					};
+					if(outputAscii != null){
+						MatrixManager.exportAsciiGrid(ppmcrook.allRun(), outputAscii);
+					}else{
+						MatrixManager.exportAsciiGrid(ppmcrook.allRun(), outputFolder+"/cluster_"+mName+"_rook.asc");
+					}
+					break;
+				case "queen" :
+					ca = new NewClusteringQueenAnalysis(m, values, null, -1, outputFolder, mName+"_queen");
+		
+					ca.addObserver(this);
+					
+					Raster rqueen = (Raster) ca.allRun();
+					Matrix mqueen = RasterManager.exportMatrix(rqueen, m);
+					Pixel2PixelMatrixCalculation ppmcqueen = new Pixel2PixelMatrixCalculation(m, mqueen){
+						@Override
+						protected double treatPixel(Pixel p) {
+							double v = mqueen.get(p);
+							if(v != Raster.getNoDataValue()){
+								return v;
+							}
+							if(m.get(p) != Raster.getNoDataValue()){
+								return 0;
+							}
+							return Raster.getNoDataValue();
+						}
+					};
+					if(outputAscii != null){
+						MatrixManager.exportAsciiGrid(ppmcqueen.allRun(), outputAscii);
+					}else{
+						MatrixManager.exportAsciiGrid(ppmcqueen.allRun(), outputFolder+"/cluster_"+mName+"_queen.asc");
+					}
+					break;
+					*/
+				case "rook" :
+					
+					ca = new ClusteringRook(m, values);
+					ca.addObserver(this);
+					Matrix mCluster = (Matrix) ca.allRun();
+					
+					ClusteringOutput co = new ClusteringOutput(values, minimumAreas, minimumTotalArea, outputFolder+"/cluster_"+mName+"_rook.csv", mCluster, m);
+					co.addObserver(this);
+					mCluster = (Matrix) co.allRun();
+					
+					if(outputAscii != null){
+						MatrixManager.exportAsciiGrid(mCluster, outputAscii);
+					}else{
+						MatrixManager.exportAsciiGrid(mCluster, outputFolder+"/cluster_"+mName+"_rook.asc");
+					}
+					
+					//MatrixManager.exportAsciiGridAndVisualize(mCluster, "C:/Hugues/temp/c5_rook.asc");
+					
+					/*
+					ca = new NewClusteringRookAnalysis(m, values, minimumAreas, minimumTotalArea, outputFolder, mName+"_rook");
+		
+					ca.addObserver(this);
+					
+					Raster rrook = (Raster) ca.allRun();
+					Matrix mrook = RasterManager.exportMatrix(rrook, m);
+					Pixel2PixelMatrixCalculation ppmcrook = new Pixel2PixelMatrixCalculation(m, mrook){
+						@Override
+						protected double treatPixel(Pixel p) {
+							double v = mrook.get(p);
+							if(v != Raster.getNoDataValue()){
+								return v;
+							}
+							if(m.get(p) != Raster.getNoDataValue()){
+								return 0;
+							}
+							return Raster.getNoDataValue();
+						}
+					};
+					if(outputAscii != null){
+						MatrixManager.exportAsciiGrid(ppmcrook.allRun(), outputAscii);
+					}else{
+						MatrixManager.exportAsciiGrid(ppmcrook.allRun(), outputFolder+"/cluster_"+mName+"_rook.asc");
+					}*/
+					break;
+					
+				case "queen" :
+					
+					ca = new ClusteringRook(m, values);
+					ca.addObserver(this);
+					mCluster = (Matrix) ca.allRun();
+					
+					co = new ClusteringOutput(values, minimumAreas, minimumTotalArea, outputFolder+"/cluster_"+mName+"_queen.csv", mCluster, m);
+					co.addObserver(this);
+					mCluster = (Matrix) co.allRun();
+					
+					if(outputAscii != null){
+						MatrixManager.exportAsciiGrid(mCluster, outputAscii);
+					}else{
+						MatrixManager.exportAsciiGrid(mCluster, outputFolder+"/cluster_"+mName+"_queen.asc");
+					}
+					
+					//MatrixManager.exportAsciiGridAndVisualize(mCluster, "C:/Hugues/temp/c5_queen.asc");
+					/*
+					ca = new NewClusteringQueenAnalysis(m, values, minimumAreas, minimumTotalArea, outputFolder, mName+"_queen");
+		
+					ca.addObserver(this);
+					
+					Raster rqueen = (Raster) ca.allRun();
+					Matrix mqueen = RasterManager.exportMatrix(rqueen, m);
+					Pixel2PixelMatrixCalculation ppmcqueen = new Pixel2PixelMatrixCalculation(m, mqueen){
+						@Override
+						protected double treatPixel(Pixel p) {
+							double v = mqueen.get(p);
+							if(v != Raster.getNoDataValue()){
+								return v;
+							}
+							if(m.get(p) != Raster.getNoDataValue()){
+								return 0;
+							}
+							return Raster.getNoDataValue();
+						}
+					};
+					*/
+					break;
+				case "euclidian" :
+					
+					if(outputAscii != null){
+						ca = new GroupDistanceAnalysis(m, distances, values, minimumAreas, minimumTotalArea, null, outputAscii); 
+					}else{
+						ca = new GroupDistanceAnalysis(m, distances, values, minimumAreas, minimumTotalArea, outputFolder, mName+"_euclidian"); 
+					}
+					
+					ca.addObserver(this);
+					ca.allRun();
+					break;
+				case "functional" : 
+					
+					if(friction != null){
+						if(outputAscii != null){
+							ca = new GroupDistanceAnalysis(m, distances, values, minimumAreas, minimumTotalArea, null, outputAscii, friction); 
+						}else{
+							ca = new GroupDistanceAnalysis(m, distances, values, minimumAreas, minimumTotalArea, outputFolder, mName+"_functional", friction); 
+						}
+					}else{
+						if(outputAscii != null){
+							ca = new GroupDistanceAnalysis(m, distances, values, minimumAreas, minimumTotalArea, null, outputAscii, frictionMatrix);
+						}else{
+							ca = new GroupDistanceAnalysis(m, distances, values, minimumAreas, minimumTotalArea, outputFolder, mName+"_functional", frictionMatrix);
+						}
+					}
+					ca.addObserver(this);
+					ca.allRun();
+					break;
+				}
+				
+			
+				/*
+				switch(typeCluster){
+				case "rook" : 
+					ca = new ClusteringRookAnalysis(m, values); 
+					//ca = new StraightClusteringRookAnalysis(m, values);
+					break;
+				case "queen" : 
+					ca = new ClusteringQueenAnalysis(m, values); 
+					//ca = new StraightClusteringRookAnalysis(m, values);
+					break;
+				case "euclidian" : 
+					ca = new ClusteringEuclidianDistanceAnalysis(m, distance, values); 
+					break;
 				case "functional" : 
 					if(friction != null){
 						ca = new ClusteringFunctionalDistanceAnalysis(m, distance, values, friction); 
@@ -1020,13 +1357,113 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				}else{
 					MatrixManager.exportAsciiGrid(ppt.allRun(), asciiOutput+"/"+name+"_"+suf+".asc");
 				}
+				*/
 			}
 			
 			if(viewAsciiOutput){
-				if(outputAsc != null){
-					MatrixManager.visualize(outputAsc);
+				if(outputAscii != null){
+					MatrixManager.visualize(outputAscii);
 				}else{
-					MatrixManager.visualize(asciiOutput);	
+					MatrixManager.visualize(outputFolder);	
+				}
+			}
+			
+			return true;
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			return false;
+		} 
+	}
+	
+	public boolean runGroup(boolean batch, Set<Matrix> matrix, List<Integer> values, List<Double> minimumAreas, double minimumTotal, String typeCluster, 
+			double distance, Friction friction, Matrix frictionMatrix, 
+			/*boolean sameType, boolean sameMap,*/ String outputFolder, String outputAscii, boolean viewAsciiOutput){
+		this.batch = batch;
+		try {
+			
+			for(Matrix m : matrix){
+				
+				String mName = new File(m.getFile()).getName().replace(".asc", "");
+				
+				progress = 0;
+				publish("cluster : "+mName+" using "+typeCluster);
+				Analysis ca = null;
+				
+				double[] distances = new double[1];
+				distances[0] = distance;
+				
+				switch(typeCluster){
+				case "rook" :
+					ca = new NewClusteringRookAnalysis(m, values, minimumAreas, minimumTotal, outputFolder, mName+"_rook");
+		
+					ca.addObserver(this);
+					
+					Raster rrook = (Raster) ca.allRun();
+					Matrix mrook = RasterManager.exportMatrix(rrook, m);
+					Pixel2PixelMatrixCalculation ppmcrook = new Pixel2PixelMatrixCalculation(m, mrook){
+						@Override
+						protected double treatPixel(Pixel p) {
+							double v = mrook.get(p);
+							if(v != Raster.getNoDataValue()){
+								return v;
+							}
+							if(m.get(p) != Raster.getNoDataValue()){
+								return 0;
+							}
+							return Raster.getNoDataValue();
+						}
+					};
+					if(outputAscii != null){
+						MatrixManager.exportAsciiGrid(ppmcrook.allRun(), outputAscii);
+					}else{
+						MatrixManager.exportAsciiGrid(ppmcrook.allRun(), outputFolder+"/cluster_"+mName+"_rook.asc");
+					}
+					break;
+				case "queen" :
+					ca = new NewClusteringQueenAnalysis(m, values, minimumAreas, minimumTotal, outputFolder, mName+"_queen");
+		
+					ca.addObserver(this);
+					
+					Raster rqueen = (Raster) ca.allRun();
+					Matrix mqueen = RasterManager.exportMatrix(rqueen, m);
+					Pixel2PixelMatrixCalculation ppmcqueen = new Pixel2PixelMatrixCalculation(m, mqueen){
+						@Override
+						protected double treatPixel(Pixel p) {
+							double v = mqueen.get(p);
+							if(v != Raster.getNoDataValue()){
+								return v;
+							}
+							if(m.get(p) != Raster.getNoDataValue()){
+								return 0;
+							}
+							return Raster.getNoDataValue();
+						}
+					};
+					if(outputAscii != null){
+						MatrixManager.exportAsciiGrid(ppmcqueen.allRun(), outputAscii);
+					}else{
+						MatrixManager.exportAsciiGrid(ppmcqueen.allRun(), outputFolder+"/cluster_"+mName+"_queen.asc");
+					}
+					break;
+				case "euclidian" : 
+					if(outputAscii != null){
+						//ca = new ClusteringDistanceAnalysis(m, distances, values, null, outputAscii); 
+					}else{
+						//ca = new ClusteringDistanceAnalysis(m, distances, values, outputFolder, mName+"_euclidian"); 
+						ca = new GroupDistanceAnalysis(m, distances, values, minimumAreas, minimumTotal, outputFolder, mName+"_euclidian"); 
+					}
+					
+					ca.addObserver(this);
+					ca.allRun();
+					break;
+				}
+			}
+			
+			if(viewAsciiOutput){
+				if(outputAscii != null){
+					MatrixManager.visualize(outputAscii);
+				}else{
+					MatrixManager.visualize(outputFolder);	
 				}
 			}
 			
@@ -1038,6 +1475,44 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 	}
 	
 	/*
+	
+	
+	public boolean runCombineOld(List<Matrix> matrix, List<String> names, String asciiOutput, boolean viewAsciiOutput){
+		try {
+			progress = 0;
+			String name = "combine";
+			publish("combine");
+			Matrix[] m = matrix.toArray(new Matrix[matrix.size()]);
+			Pixel2PixelMatrixCalculation ppm = new Pixel2PixelMatrixCalculation(m){
+				@Override
+				protected double treatPixel(Pixel p) {
+					double value = 0.0;
+					int index = 0;
+					for(Matrix m : wholeMatrix()){
+						double v = m.get(p);
+						if(v == Raster.getNoDataValue()){
+							return Raster.getNoDataValue();
+						}
+						value += v * factors.get(index);
+						index++;
+					}
+					return value;
+				}
+			};
+			ppm.addObserver(this);
+			Matrix mo = ppm.allRun();
+			MatrixManager.exportAsciiGrid(mo, asciiOutput+"/"+name+".asc");
+			
+			if(viewAsciiOutput){
+				MatrixManager.visualize(asciiOutput+"/"+name+".asc");
+			}
+			
+			return true;
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 	
 	private String getCommonString(String s1, String s2){
 		String c = "";

@@ -61,6 +61,7 @@ import fr.inra.sad.bagap.apiland.analysis.matrix.process.metric.MatrixMetricMana
 import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.WindowShapeType;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Pixel;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Raster;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.RefPoint;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.CoordinateManager;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Friction;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Matrix;
@@ -69,6 +70,7 @@ import fr.inra.sad.bagap.apiland.core.time.Instant;
 import fr.inra.sad.bagap.chloe.controller.Controller;
 import fr.inra.sad.bagap.chloe.controller.LocalContext;
 import fr.inra.sad.bagap.chloe.view.TreatmentTree;
+import fr.inra.sad.bagap.chloe.view.distance.DistanceFunctionDialog;
 import fr.inra.sad.bagap.chloe.view.wizard.Wizard;
 import fr.inra.sad.bagap.chloe.view.wizard.WizardPanel;
 
@@ -82,9 +84,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	protected static GridBagConstraints c;
 	
-	protected static Set<Matrix> inputMatrix, /*fM,*/ filterMatrix;
+	protected static Set<Matrix> inputMatrix, /*fM,*/ filterMatrix, frictionMatrix, clusterFrictionMatrix, distanceFrictionMatrix;
 	
-	protected static String inputAscii, inputCsv, mapCsv, inputShape, importationFile;
+	protected static String inputAscii, inputCsv, mapCsv, inputShape, importationFile, distanceFunction;
 	
 	protected static int windowSize, gridSize;
 	
@@ -98,13 +100,15 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	protected static Set<String> asciis, shapes;
 	
-	protected static Friction friction, clusterFriction; 
+	protected static Friction friction, clusterFriction, distanceFriction; 
 	
-	protected static Matrix frictionMatrix, clusterFrictionMatrix;
+	//protected static Matrix frictionMatrix, distanceFrictionMatrix;
 	
 	protected static int oldNoData;
 	
 	protected static Set<Pixel> pixels;
+	
+	protected static Set<RefPoint> points;
 	
 	protected static Set<String> variables, vmap;
 	
@@ -112,42 +116,64 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	protected static String attribute;
 	
-	protected static final int maxQualitativeClassNumber = 200000;
-	
-	protected static DefaultTableModel tCIM, tCNIM, tNFM, tFM, tDistancesModel, tFiltersModel, tmMatrix/*, tClassificationModel*/;
-	
-	protected static JLabel title, lAsciiInput, lAsciiFilter, lType, lShape, lSize, lSizeMeters, lGSize, 
-	lCsvOutput, lDelta, lDeltaMeters, lMaxRate, lMetrics, lMSMetrics, lOutputFolder, lFilters, lFriction, lNPixel, 
-	lConstraint, lValues, lDistances, lValue, lCsvInput, lVariables, lMatrix, lClusters,
-	lnodatavalue, lnrows, lxllcorner, lyllcorner, lcellsize, lHeader, lncols, lClassification, lFuzion, lFilterAscii,
-	lShapeInput, lAttribute, lCellsize, lEnvelope, lMinX, lMinY, lMaxX, lMaxY, lCorrespondance, lppSelection;
+	protected static final int maxQualitativeClassNumber2 = 200000;
 
+	protected static DefaultTableModel tCIM, tCNIM, tNFM, tFM, tDistancesModel, tHabitatsModel, tComplementariesModel, tFiltersModel, tmMatrix/*, tClassificationModel*/;
+
+	/** les labels */
+	protected static JLabel title, lAsciiInput, lAsciiFilter, lType, lShape, lSize, lSizeMeters, lGSize, 
+	lCsvOutput, lDelta, lXOrigin, lYOrigin, lDeltaMeters, lMaxRate, lMetrics, lMSMetrics, lOutputFolder, lFilters, lFriction, lNPixel, 
+	lConstraint, lValues, lDistances, lValue, lCsvInput, lVariables, lMatrix, lClusters, lHabitats, lComplementaries,
+	lnodatavalue, lnrows, lxllcorner, lyllcorner, lcellsize, lHeader, lncols, lClassification, lFuzion, lFilterAscii,
+	lShapeInput, lAttribute, lCellsize, lEnvelope, lMinX, lMinY, lMaxX, lMaxY, lCorrespondance, lppSelection, lCombination, lDistanceType,
+	lDistanceOrigin, lDistanceOriginValue, lDistanceFinal, lDistanceFinalValue, lDistanceTilt, lDMax, lDistanceBaseValue, lDistancePic, 
+	lDistancePicValue, lDistanceQValue, lFrictionCluster, lFrictionDistance,
+	lFictif, lHabitatDistance, lMinimumTotalArea;
+
+	/** les boutons */
 	protected static JButton bAsciiInput, bAsciiFilter, bMatrixAdd, bMatrixRemove, bMatrixUp, bMatrixDown, bViewAsciiInput, bViewAsciiFilter, 
-	bCsvOutput, bsAdd, bsRem, bsgAdd, bsgRem, bmAll, bmAdd, bmRem, bmsmAll, bmsmAdd, bmsmRem, bOutputFolder, bFriction, bFrictionCluster, bPixel, bPoint, bRunPixel, 
-	bExportPixel, bExportPoint, bCsvInput, bSort, bHeader, bmVAll, bmVAdd, bmVRem, bViewAscii, bFuzion,
-	bShapeInput, bsSFAdd, bsSFRem, bCorrespondance, bNewClassification, bRemoveClassification, bCsvMap, bCsvApply, bImportEnvelope, bExportEnvelope;
-	
-	protected static JTextArea taAsciiInput, taAsciiFilter, taOutputFolder, taCsvOutput, taCsvInput, taPixel, taPoint, taFriction, taFrictionCluster, taShapeInput, taCorrespondance;
-	
+	bCsvOutput, bsAdd, bsRem, bsgAdd, bsgRem, bmAll, bmAdd, bmRem, bmsmAll, bmsmAdd, bmsmRem, bOutputFolder,  bOutputFolder2, bOutputFolder3, 
+	bFriction, bFrictionCluster, bFrictionDistance, bPixel, bPoint, bRunPixel, 
+	bExportPixel, bExportPoint, bCsvInput, bSort, bHeader, bmVAll, bmVAdd, bmVRem, bViewAscii, bFuzion, bViewFuzionAscii, bRemoveFuzionAscii,
+	bShapeInput, bsSFAdd, bsSFRem, bCorrespondance, bNewClassification, bRemoveClassification, bCsvMap, bCsvApply, bImportEnvelope, bExportEnvelope,
+	bDistanceFunction, bDistanceImport, bDistanceExport, bDistancePost;
+
+	/** les zones de texte */
+	protected static JTextArea taAsciiInput, taAsciiFilter, taOutputFolder, taCsvOutput, taCsvInput, taPixel, taPoint, taFriction, taFrictionCluster, taFrictionDistance, 
+	taShapeInput, taCorrespondance, 
+	taCombination, taFormula, taDistanceOrigin, taDistanceFinal, taDistancePic, taOutputFolder2, taOutputFolder3;
+
 	protected static JComboBox<String> cbType;  
 	
 	protected static JComboBox<WindowShapeType> cbShape;
 	
-	protected static JSpinner spDelta, spMaxRate, spSize, spGSize, spNPixel, spMinDistance, spNoData, spEuclidianDistanceCluster, spFunctionalDistanceCluster,
-	spncols, spnrows, spxllcorner, spyllcorner, spcellsize, spnodatavalue, spCellsize, spMinX, spMinY, spMaxX, spMaxY;
-
-	protected static JCheckBox viewAsciiOutput , exportCsv, exportAscii, cbCI, cbCNI, cbMinDistance, cbInterpolate, cbF, cbNF, cbEnvelope;
+	protected static int index3 = 0;
 	
-	protected static JTable tSize, tGSize, tLMetrics, tCMetrics, tCI, tCNI, tLMSMetrics, tCMSMetrics, tChanges, tF, tNF, tDistances, tFilters,
+	/** les spinners */
+	protected static JSpinner spDelta, spXOrigin, spYOrigin, spMaxRate, spSize, spGSize, spNPixel, spMinDistance, spNoData, spEuclidianCluster, spFunctionalCluster,
+	spncols, spnrows, spxllcorner, spyllcorner, spcellsize, spnodatavalue, spCellsize, spMinX, spMinY, spMaxX, spMaxY, spMaxDistance,
+	spDistanceOriginValue, spDistanceFinalValue, spDistanceTilt, spDistanceBaseValue, spDistancePicValue, spDistanceQValue, spHabitatDistance,
+	spGlobalMinimumSurface, spGlobalMaximumSurface, spMinimumTotalArea;
+
+	/** les checkbox */
+	protected static JCheckBox viewAsciiOutput, exportCsv, exportAscii, cbCI, cbCNI, cbMinDistance, cbInterpolate, cbF, cbNF, cbEnvelope,
+	viewAsciiOutput2, viewAsciiOutput3, cbMaxDistance, cbGlobalMinimumSurface, cbGlobalMaximumSurface;
+
+	/** les tables */
+	protected static JTable tSize, tGSize, tLMetrics, tCMetrics, tCI, tCNI, tLMSMetrics, tCMSMetrics, tChanges, tF, tNF, tDistances, tHabitats, tComplementaries, tFilters,
 	tLVariables, tCVariables, tAttribute, tCellsize, tClassification, tMatrix, tFuzion, tLMap;
-
-	protected static JRadioButton rbPixel, rbPoint, rbGPixel, rbRook, rbQueen, rbEuclidianDistance, rbFunctionalDistance; 
 	
-	protected static JScrollPane pSize, pGSize, pLMetrics, pCMetrics, pLMSMetrics, pCMSMetrics, pCI, pCNI, pF, pNF, pDistances, pFilters, pClassification,
+	/** les boutons radio*/
+	protected static JRadioButton rbPixel, rbPoint, rbGPixel, rbRook, rbQueen, rbEuclidianCluster, rbFunctionalCluster, rbThreshold, rbFormula, 
+	rbUserFormula, rbLinearFunction, rbCurveFunctionType1, rbCurveFunctionType2, rbGaussianFunction, rbEuclidianDistance, rbFunctionalDistance,
+	rbHabitatRook, rbHabitatQueen, rbHabitatEuclidian, rbHabitatFunctional; 
+	
+	/** les zones de defilement */
+	protected static JScrollPane pSize, pGSize, pLMetrics, pCMetrics, pLMSMetrics, pCMSMetrics, pCI, pCNI, pF, pNF, pDistances, pHabitats, pComplementaries, pFilters, pClassification,
 	pValues, pLVariables, pCVariables, pCellsize, pAttribute, pMatrix, pFuzion, pLMap;
 
 	protected static List<Matrix> inputMatrix2, inputMatrix3;
-	
+
 	protected static final Instant t = Instant.get(1, 1, 2000);
 	
 	static {	
@@ -156,14 +182,13 @@ public abstract class TreatmentPanel extends WizardPanel {
 	}
 	//fin de declaration et d'instanciation des elements statiques
 
-	
 	public TreatmentPanel(Wizard w){
 		wizard = w;
 		
 		setLayout(new GridBagLayout());
 		setBackground(new Color(TreatmentTree.r, TreatmentTree.g, TreatmentTree.b));
-	}
-	
+	}	
+
 	protected static Controller getController() {
 		return wizard.getController();
 	}
@@ -180,12 +205,18 @@ public abstract class TreatmentPanel extends WizardPanel {
 		variables = new TreeSet<String>();
 		vmap = new TreeSet<String>();
 		filterMatrix = new HashSet<Matrix>();
+		clusterFrictionMatrix = new HashSet<Matrix>();
+		frictionMatrix = new HashSet<Matrix>();
+		distanceFrictionMatrix = new HashSet<Matrix>();
 		
 		title = new JLabel();
-		//title.setForeground(Color.BLUE);
-		title.setForeground(Color.GRAY);
+		title.setForeground(Color.BLUE);
+		//title.setForeground(Color.GRAY);
 		title.setFont(new Font("Verdana", Font.BOLD, 18));
+		
 		Font fl = new Font("Verdana", Font.BOLD, 13);
+		
+		lFictif = new JLabel("                                                                                     ");
 		
 		lMatrix = new JLabel("matrix to overlay : ");
 		lMatrix.setFont(fl);
@@ -212,6 +243,19 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bViewAsciiFilter = new JButton("Visualize");
 		bViewAsciiFilter.setEnabled(false);
 		
+		bDistanceFunction = new JButton("Preview");
+		bDistanceFunction.setForeground(Color.RED);
+		bDistanceFunction.setEnabled(false);
+		
+		bDistanceImport = new JButton("Import formula");
+		bDistanceImport.setEnabled(false);
+		
+		bDistanceExport = new JButton("Export formula");
+		bDistanceExport.setEnabled(false);
+		
+		bDistancePost = new JButton("Post function");
+		bDistancePost.setEnabled(false);
+		
 		bMatrixAdd = new JButton("Add");
 		bMatrixRemove = new JButton("Remove");
 		bMatrixRemove.setEnabled(false);
@@ -221,6 +265,12 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bMatrixDown.setEnabled(false);
 		bViewAscii = new JButton("Visualize");
 		bViewAscii.setEnabled(false);
+		
+		bViewFuzionAscii = new JButton("Visualize");
+		bViewFuzionAscii.setEnabled(false);
+		
+		bRemoveFuzionAscii = new JButton("Remove Last");
+		bRemoveFuzionAscii.setEnabled(false);
 		
 		lppSelection = new JLabel("pixels/points selection : ");
 		lppSelection.setFont(fl);
@@ -239,7 +289,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		
 		pLMap = new JScrollPane();
 		pLMap.setPreferredSize(new Dimension(400,200));
-		pLMap.setMinimumSize(new Dimension(300,100));
+		pLMap.setMinimumSize(new Dimension(300,200));
 		pLMap.setBackground(Color.WHITE);
 		Vector<String> columns = new Vector<String>();
 		columns.add("map with");
@@ -260,8 +310,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 		lVariables.setFont(fl);
 		
 		pLVariables = new JScrollPane();
-		pLVariables.setPreferredSize(new Dimension(400,200));
-		pLVariables.setMinimumSize(new Dimension(300,100));
+		pLVariables.setPreferredSize(new Dimension(300,200));
+		pLVariables.setMinimumSize(new Dimension(300,200));
 		pLVariables.setBackground(Color.WHITE);
 		columns = new Vector<String>();
 		columns.add("variable");
@@ -284,8 +334,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bmVRem.setEnabled(false);
 		
 		pCVariables = new JScrollPane();
-		pCVariables.setPreferredSize(new Dimension(400,200));
-		pCVariables.setMinimumSize(new Dimension(300,100));
+		pCVariables.setPreferredSize(new Dimension(300, 200));
+		pCVariables.setMinimumSize(new Dimension(300,200));
 		pCVariables.setBackground(Color.WHITE);
 		tCVariables = new JTable(new Vector<Vector<String>>(), columns){
 			private static final long serialVersionUID = 1L;
@@ -350,33 +400,194 @@ public abstract class TreatmentPanel extends WizardPanel {
 		lClusters = new JLabel("clusters from value(s) : ");
 		lClusters.setFont(fl);
 		
+		lHabitats = new JLabel("value(s) for habitat : ");
+		lHabitats.setFont(fl);
+		
+		lComplementaries = new JLabel("value(s) for complementary habitat : ");
+		lComplementaries.setFont(fl);
+		
 		rbRook = new JRadioButton("rook neighbourhood");
 		rbRook.setFont(fl);
+		rbRook.setSelected(true);
 		rbRook.setEnabled(false);
 		
 		rbQueen = new JRadioButton("queen neighbourhood");
 		rbQueen.setFont(fl);
 		rbQueen.setEnabled(false);
 		
-		rbEuclidianDistance = new JRadioButton("euclidian distance (in meters): ");
-		rbEuclidianDistance.setFont(fl);
-		rbEuclidianDistance.setEnabled(false);
+		rbEuclidianCluster = new JRadioButton("euclidian distance (in meters): ");
+		rbEuclidianCluster.setFont(fl);
+		rbEuclidianCluster.setEnabled(false);
 		
-		spEuclidianDistanceCluster = new JSpinner(new SpinnerNumberModel(Raster.getCellSize(), Raster.getCellSize(), 999999999, 1));
-		spEuclidianDistanceCluster.setEnabled(false);
+		spEuclidianCluster = new JSpinner(new SpinnerNumberModel(Raster.getCellSize(), Raster.getCellSize(), 999999999, 1));
+		spEuclidianCluster.setEnabled(false);
 		
-		rbFunctionalDistance = new JRadioButton("functional distance (in meters): ");
-		rbFunctionalDistance.setFont(fl);
-		rbFunctionalDistance.setEnabled(false);
+		rbFunctionalCluster = new JRadioButton("functional distance (in meters): ");
+		rbFunctionalCluster.setFont(fl);
+		rbFunctionalCluster.setEnabled(false);
 		
-		spFunctionalDistanceCluster = new JSpinner(new SpinnerNumberModel(Raster.getCellSize(), Raster.getCellSize(), 999999999, 1));
-		spFunctionalDistanceCluster.setEnabled(false);
+		spFunctionalCluster = new JSpinner(new SpinnerNumberModel(Raster.getCellSize(), Raster.getCellSize(), 999999999, 1));
+		spFunctionalCluster.setEnabled(false);
 		
 		ButtonGroup bgCluster = new ButtonGroup();
 		bgCluster.add(rbRook);
 		bgCluster.add(rbQueen);
-		bgCluster.add(rbEuclidianDistance);
-		bgCluster.add(rbFunctionalDistance);
+		bgCluster.add(rbEuclidianCluster);
+		bgCluster.add(rbFunctionalCluster);
+		
+		rbHabitatRook = new JRadioButton("rook neighbourhood");
+		rbHabitatRook.setFont(fl);
+		rbHabitatRook.setSelected(true);
+		rbHabitatRook.setEnabled(false);
+		
+		rbHabitatQueen = new JRadioButton("queen neighbourhood");
+		rbHabitatQueen.setFont(fl);
+		rbHabitatQueen.setEnabled(false);
+		
+		rbHabitatEuclidian = new JRadioButton("euclidian distance");
+		rbHabitatEuclidian.setFont(fl);
+		rbHabitatEuclidian.setEnabled(false);
+		
+		rbHabitatFunctional = new JRadioButton("functional distance");
+		rbHabitatFunctional.setFont(fl);
+		rbHabitatFunctional.setEnabled(false);
+		
+		spHabitatDistance = new JSpinner(new SpinnerNumberModel(Raster.getCellSize(), Raster.getCellSize(), 999999999, 1));
+		spHabitatDistance.setEnabled(false);
+		
+		ButtonGroup bgHabitat = new ButtonGroup();
+		bgHabitat.add(rbHabitatRook);
+		bgHabitat.add(rbHabitatQueen);
+		bgHabitat.add(rbHabitatEuclidian);
+		bgHabitat.add(rbHabitatFunctional);
+		
+		lHabitatDistance = new JLabel("maximum distance (in meters) : ");
+		lHabitatDistance.setFont(fl);
+		//lHabitatDistance.setEnabled(false);
+		
+		cbGlobalMinimumSurface = new JCheckBox("global minimum surface (in hectares) : ");
+		cbGlobalMinimumSurface.setFont(fl);
+		cbGlobalMinimumSurface.setEnabled(false);
+		
+		spGlobalMinimumSurface = new JSpinner(new SpinnerNumberModel(0, 0, 999999999, 1));
+		spGlobalMinimumSurface.setEnabled(false);
+		
+		cbGlobalMaximumSurface = new JCheckBox("global maximum surface (in hectares) : ");
+		cbGlobalMaximumSurface.setFont(fl);
+		cbGlobalMaximumSurface.setEnabled(false);
+		
+		spGlobalMaximumSurface = new JSpinner(new SpinnerNumberModel(0, 0, 999999999, 1));
+		spGlobalMaximumSurface.setEnabled(false);
+		
+		rbEuclidianDistance = new JRadioButton("euclidian distance");
+		rbEuclidianDistance.setFont(fl);
+		rbEuclidianDistance.setSelected(true);
+		rbEuclidianDistance.setEnabled(false);
+		
+		rbFunctionalDistance = new JRadioButton("functional distance");
+		rbFunctionalDistance.setFont(fl);
+		rbFunctionalDistance.setEnabled(false);
+		
+		ButtonGroup bgDistance = new ButtonGroup();
+		bgDistance.add(rbEuclidianDistance);
+		bgDistance.add(rbFunctionalDistance);
+		
+		cbMaxDistance = new JCheckBox("maximum distance (in meters) : ");
+		cbMaxDistance.setFont(fl);
+		cbMaxDistance.setEnabled(false);
+		
+		spMaxDistance = new JSpinner(new SpinnerNumberModel(Raster.getCellSize(), Raster.getCellSize(), 999999999, 1));
+		spMaxDistance.setEnabled(false);
+		
+		rbUserFormula = new JRadioButton("user formula");
+		rbUserFormula.setSelected(true);
+		rbUserFormula.setEnabled(true);
+		
+		rbLinearFunction = new JRadioButton("linear function");
+		rbLinearFunction.setFont(fl);
+		rbLinearFunction.setEnabled(false);
+		
+		rbCurveFunctionType1 = new JRadioButton("curve function (1)");
+		rbCurveFunctionType1.setFont(fl);
+		rbCurveFunctionType1.setEnabled(false);
+		
+		rbCurveFunctionType2 = new JRadioButton("curve function (2)");
+		rbCurveFunctionType2.setFont(fl);
+		rbCurveFunctionType2.setEnabled(false);
+		
+		rbGaussianFunction = new JRadioButton("gaussian function");
+		rbGaussianFunction.setFont(fl);
+		rbGaussianFunction.setEnabled(false);
+		
+		ButtonGroup bgDistanceFunction = new ButtonGroup();
+		bgDistanceFunction.add(rbUserFormula);
+		bgDistanceFunction.add(rbLinearFunction);
+		bgDistanceFunction.add(rbCurveFunctionType1);
+		bgDistanceFunction.add(rbCurveFunctionType2);
+		bgDistanceFunction.add(rbGaussianFunction);
+		
+		lDistanceOrigin = new JLabel("origin");
+		lDistanceOrigin.setFont(fl);
+		lDistanceOrigin.setEnabled(false);
+		
+		lDistanceFinal = new JLabel("final");
+		lDistanceFinal.setFont(fl);
+		lDistanceFinal.setEnabled(false);
+		
+		lDistanceTilt = new JLabel("tilt");
+		lDistanceTilt.setFont(fl);
+		lDistanceTilt.setEnabled(false);
+		
+		taDistanceOrigin = new JTextArea("0");
+		taDistanceOrigin.setEnabled(false);
+		
+		taDistanceFinal = new JTextArea("dmax");
+		taDistanceFinal.setEnabled(false);
+		
+		taDistancePic = new JTextArea("dmax/2");
+		taDistancePic.setEnabled(false);
+		
+		lDistanceOriginValue = new JLabel("origin value");
+		lDistanceOriginValue.setFont(fl);
+		lDistanceOriginValue.setEnabled(false);
+		
+		lDistanceFinalValue = new JLabel("final value");
+		lDistanceFinalValue.setFont(fl);
+		lDistanceFinalValue.setEnabled(false);
+		
+		spDistanceOriginValue = new JSpinner(new SpinnerNumberModel(1.0, -100, 100, 0.01));
+		spDistanceOriginValue.setEnabled(false);
+		
+		spDistanceFinalValue = new JSpinner(new SpinnerNumberModel(0.0, -100, 100, 0.01));
+		spDistanceFinalValue.setEnabled(false);
+		
+		spDistanceTilt = new JSpinner(new SpinnerNumberModel(3.14, 1, 1000, 0.01));
+		spDistanceTilt.setEnabled(false);
+		
+		spDistanceBaseValue = new JSpinner(new SpinnerNumberModel(0.0, -100, 100, 0.01));
+		spDistanceBaseValue.setEnabled(false);
+		
+		spDistancePicValue = new JSpinner(new SpinnerNumberModel(1.0, -100, 100, 0.01));
+		spDistancePicValue.setEnabled(false);
+		
+		spDistanceQValue = new JSpinner(new SpinnerNumberModel(4, 1, 100, 0.01));
+		spDistanceQValue.setEnabled(false);
+		
+		lDistanceBaseValue = new JLabel("base value");
+		lDistanceBaseValue.setFont(fl);
+		lDistanceBaseValue.setEnabled(false);
+		
+		lDistancePic = new JLabel("pic");
+		lDistancePic.setFont(fl);
+		lDistancePic.setEnabled(false);
+		
+		lDistancePicValue = new JLabel("pic value");
+		lDistancePicValue.setFont(fl);
+		lDistancePicValue.setEnabled(false);
+		
+		lDistanceQValue = new JLabel("Q value");
+		lDistanceQValue.setFont(fl);
+		lDistanceQValue.setEnabled(false);
 		
 		pValues = new JScrollPane();
 		pValues.setPreferredSize(new Dimension(400,200));
@@ -399,6 +610,18 @@ public abstract class TreatmentPanel extends WizardPanel {
 		
 		lFriction = new JLabel("friction file :");
 		lFriction.setFont(fl);
+		lFriction.setEnabled(false);
+		
+		lFrictionCluster = new JLabel("friction file :");
+		lFrictionCluster.setFont(fl);
+		lFrictionCluster.setEnabled(false);
+		
+		lFrictionDistance = new JLabel("friction file :");
+		lFrictionDistance.setFont(fl);
+		lFrictionDistance.setEnabled(false);
+		
+		lDMax = new JLabel("");
+		lDMax.setFont(fl);
 		
 		taFriction = new JTextArea();
 		taFriction.setEnabled(false);
@@ -406,20 +629,26 @@ public abstract class TreatmentPanel extends WizardPanel {
 		taFrictionCluster = new JTextArea();
 		taFrictionCluster.setEnabled(false);
 		
+		taFrictionDistance = new JTextArea();
+		taFrictionDistance.setEnabled(false);
+		
 		bFriction = new JButton("Browse");
 		bFriction.setEnabled(false);
 		
 		bFrictionCluster = new JButton("Browse");
 		bFrictionCluster.setEnabled(false);
 		
+		bFrictionDistance = new JButton("Browse");
+		bFrictionDistance.setEnabled(false);
+		
 		lType = new JLabel("type of metrics : ");
 		lType.setFont(fl);
 		
-		cbType = new JComboBox<String>(new String[]{"values metrics", "couples metrics", "patches metrics", "connectivity metrics", "diversity metrics", "landscape grain", "quantitative metrics"});
+		cbType = new JComboBox<String>(new String[]{"values metrics", "couples metrics", "patches metrics", "connectivity metrics", "heterogeneity metrics", "landscape grain", "quantitative metrics"});
 		cbType.setSelectedIndex(0);
 		cbType.setEnabled(false);
 		
-		lMaxRate = new JLabel("maximum rate of missing values : ");
+		lMaxRate = new JLabel("max rate of missing values : ");
 		lMaxRate.setFont(fl);
 		
 		spMaxRate = new JSpinner(new SpinnerNumberModel(100, 0, 100, 1));
@@ -447,8 +676,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bsgAdd.setEnabled(false);
 		
 		pSize = new JScrollPane();
-		pSize.setPreferredSize(new Dimension(200,100));
-		pSize.setMinimumSize(new Dimension(200,100));
+		pSize.setPreferredSize(new Dimension(100,100));
+		pSize.setMinimumSize(new Dimension(100,100));
 		pSize.setBackground(Color.WHITE);
 		columns.clear();
 		columns.add("size");
@@ -477,6 +706,20 @@ public abstract class TreatmentPanel extends WizardPanel {
 		
 		spDelta = new JSpinner(new SpinnerNumberModel(1, 1, 100000, 1));
 		spDelta.setEnabled(false);
+		
+		lXOrigin = new JLabel("X origin : ");
+		lXOrigin.setEnabled(false);
+		lXOrigin.setFont(fl);
+		
+		spXOrigin = new JSpinner(new SpinnerNumberModel(0, 0, 100000, 1));
+		spXOrigin.setEnabled(false);
+		
+		lYOrigin = new JLabel("Y origin : ");
+		lYOrigin.setEnabled(false);
+		lYOrigin.setFont(fl);
+		
+		spYOrigin = new JSpinner(new SpinnerNumberModel(0, 0, 100000, 1));
+		spYOrigin.setEnabled(false);
 		
 		lDeltaMeters = new JLabel("");
 		lDeltaMeters.setFont(fl);
@@ -514,7 +757,23 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bg.add(rbPoint);
 		bg.add(rbGPixel);
 		
-		lNPixel = new JLabel("number of pixel(s) to generate :");
+		rbThreshold = new JRadioButton("threshold");
+		rbThreshold.setSelected(true);
+		rbThreshold.setFont(fl);
+		rbThreshold.setEnabled(false);
+		
+		rbFormula = new JRadioButton("weighted");
+		rbFormula.setFont(fl);
+		rbFormula.setEnabled(false);
+		
+		taFormula = new JTextArea();
+		taFormula.setFont(new Font("TimesRoman", Font.BOLD, 16));
+		
+		ButtonGroup bgWeighted = new ButtonGroup();
+		bgWeighted.add(rbThreshold);
+		bgWeighted.add(rbFormula);
+		
+		lNPixel = new JLabel("number of pixel(s) :");
 		lNPixel.setFont(fl);
 		
 		spNPixel = new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE, 1));
@@ -593,7 +852,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		tDistances = new JTable(tDistancesModel);
 		tDistances.setEnabled(false);
 		pDistances.setViewportView(tDistances);
-	    
+		
 		pFilters = new JScrollPane();
 		pFilters.setPreferredSize(new Dimension(100,150));
 		pFilters.setMinimumSize(new Dimension(100,150));
@@ -610,6 +869,51 @@ public abstract class TreatmentPanel extends WizardPanel {
 		tFilters = new JTable(tFiltersModel);
 		tFilters.setEnabled(false);
 		pFilters.setViewportView(tFilters);
+		
+		pHabitats = new JScrollPane();
+		pHabitats.setPreferredSize(new Dimension(420,150));
+		pHabitats.setMinimumSize(new Dimension(420,150));
+		pHabitats.setBackground(Color.WHITE);
+		
+		columns.clear();
+		columns.add("values");
+		columns.add("minimum (ha)");
+		columns.add("maximum (ha)");
+		tHabitatsModel = new DefaultTableModel(new Vector<Vector<String>>(), columns){
+			private static final long serialVersionUID = 1L;
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+		
+		tHabitats = new JTable(tHabitatsModel);
+		tHabitats.setEnabled(false);
+		pHabitats.setViewportView(tHabitats);
+		
+		pComplementaries = new JScrollPane();
+		pComplementaries.setPreferredSize(new Dimension(420,150));
+		pComplementaries.setMinimumSize(new Dimension(420,150));
+		pComplementaries.setBackground(Color.WHITE);
+		
+		columns.clear();
+		columns.add("values");
+		columns.add("minimum (ha)");
+		columns.add("maximum (ha)");
+		columns.add("distance (in meters)");
+		tComplementariesModel = new DefaultTableModel(new Vector<Vector<String>>(), columns){
+			private static final long serialVersionUID = 1L;
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+		
+		tComplementaries = new JTable(tComplementariesModel);
+		tComplementaries.setEnabled(false);
+		pComplementaries.setViewportView(tComplementaries);
+	    
+		
 		
 		columns.clear();
 		columns.add("matrix");
@@ -666,7 +970,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		
 		Vector<String> columns3 = new Vector<String>();
 		columns3.add("matrix");
-		columns3.add("factor");
+		columns3.add("name");
 		
 		DefaultTableModel tFuzionM = new DefaultTableModel(new Vector<Vector<String>>(), columns3){
 			private static final long serialVersionUID = 1L;
@@ -732,7 +1036,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 		tCNI.setEnabled(false);
 		pCNI.setViewportView(tCNI);
 		
-		bRunPixel = new JButton("Generate");
+		bRunPixel = new JButton("Generate pixels");
+		bRunPixel.setForeground(Color.RED);
 		bRunPixel.setEnabled(false);
 		
 		bExportPixel = new JButton("Export pixels");
@@ -745,8 +1050,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 		lMetrics.setFont(fl);
 		
 		pLMetrics = new JScrollPane();
-		pLMetrics.setPreferredSize(new Dimension(300,200));
-		pLMetrics.setMinimumSize(new Dimension(300,100));
+		pLMetrics.setPreferredSize(new Dimension(150,200));
+		pLMetrics.setMinimumSize(new Dimension(150,100));
 		pLMetrics.setBackground(Color.WHITE);
 		columns.clear();
 		columns.add("metric");
@@ -769,8 +1074,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bmRem.setEnabled(false);
 		
 		pCMetrics = new JScrollPane();
-		pCMetrics.setPreferredSize(new Dimension(300,200));
-		pCMetrics.setMinimumSize(new Dimension(300,100));
+		pCMetrics.setPreferredSize(new Dimension(150,200));
+		pCMetrics.setMinimumSize(new Dimension(150,100));
 		pCMetrics.setBackground(Color.WHITE);
 		tCMetrics = new JTable(new Vector<Vector<String>>(), columns){
 			private static final long serialVersionUID = 1L;
@@ -825,8 +1130,20 @@ public abstract class TreatmentPanel extends WizardPanel {
 		taOutputFolder = new JTextArea();
 		taOutputFolder.setEnabled(false);
 		
+		taOutputFolder2 = new JTextArea();
+		taOutputFolder2.setEnabled(false);
+		
+		taOutputFolder3 = new JTextArea();
+		taOutputFolder3.setEnabled(false);
+		
 		bOutputFolder = new JButton("Browse");
 		bOutputFolder.setEnabled(false);
+		
+		bOutputFolder2 = new JButton("Browse");
+		bOutputFolder2.setEnabled(false);
+		
+		bOutputFolder3 = new JButton("Browse");
+		bOutputFolder3.setEnabled(false);
 		
 		lCsvOutput = new JLabel("csv output file : ");
 		lCsvOutput.setFont(fl);
@@ -837,17 +1154,27 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bCsvOutput = new JButton("Browse");
 		bCsvOutput.setEnabled(false);
 		
-		viewAsciiOutput = new JCheckBox("visualize ascii grid output(s)");
+		viewAsciiOutput = new JCheckBox("visualize ascii grid(s)");
 		viewAsciiOutput.setFont(fl);
 		viewAsciiOutput.setSelected(true);
 		viewAsciiOutput.setEnabled(false);
+		
+		viewAsciiOutput2 = new JCheckBox("visualize ascii grid(s)");
+		viewAsciiOutput2.setFont(fl);
+		viewAsciiOutput2.setSelected(true);
+		viewAsciiOutput2.setEnabled(false);
+		
+		viewAsciiOutput3 = new JCheckBox("visualize ascii grid(s)");
+		viewAsciiOutput3.setFont(fl);
+		viewAsciiOutput3.setSelected(true);
+		viewAsciiOutput3.setEnabled(false);
 		
 		exportCsv = new JCheckBox("export csv file(s)");
 		exportCsv.setFont(fl);
 		exportCsv.setSelected(true);
 		exportCsv.setEnabled(false);
 		
-		exportAscii = new JCheckBox("export ascii grid output(s)");
+		exportAscii = new JCheckBox("export ascii grid(s)");
 		exportAscii.setFont(fl);
 		exportAscii.setSelected(true);
 		exportAscii.setEnabled(false);
@@ -958,9 +1285,40 @@ public abstract class TreatmentPanel extends WizardPanel {
 	    
 	    bExportEnvelope = new JButton("Export envelope");
 	    bExportEnvelope.setEnabled(false);
+	    
+	    lCombination = new JLabel("formula : ");
+	    lCombination.setFont(fl);
+	    
+	    taCombination = new JTextArea();
+	    
+	    lDistanceType = new JLabel("distance type : ");
+	    lDistanceType.setFont(fl);
+	    
+	    lMinimumTotalArea = new JLabel("minimum total area (in hectares) : ");
+	    lMinimumTotalArea.setFont(fl);
+	    
+		spMinimumTotalArea = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 999999999.0, 1));
+		JSpinner.NumberEditor editormintotalarea = new JSpinner.NumberEditor(spMinimumTotalArea, "0.000");
+		spMinimumTotalArea.setEditor(editormintotalarea);
+		spMinimumTotalArea.setEnabled(false);
 	}
 	
 	protected static void actionComponents() {
+		
+		bDistanceFunction.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(!taFormula.getText().equalsIgnoreCase("")){
+					double dmax = Raster.getNoDataValue();
+					if(tSize.getModel().getRowCount() > 0){
+						double cellsize = Raster.getCellSize();
+						int size = (Integer) tSize.getModel().getValueAt(0, 0);
+						dmax = ((size - 1) / 2) * cellsize;
+					}
+					new DistanceFunctionDialog(getController().getIhm().getFrame(), taFormula.getText(), dmax);
+				}
+			}
+		});
 		
 		bAsciiInput.addActionListener(new ActionListener(){
 			@Override
@@ -1063,18 +1421,38 @@ public abstract class TreatmentPanel extends WizardPanel {
 			}
 		});
 		
+		cbMaxDistance.addItemListener(new ItemListener(){
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if(e.getStateChange() == ItemEvent.SELECTED){
+					spMaxDistance.setEnabled(true);
+				}else{
+					spMaxDistance.setEnabled(false);
+				}
+			}
+		});
+		
 		cbShape.addItemListener(new ItemListener(){
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if(e.getStateChange() == ItemEvent.SELECTED){
 					if(((WindowShapeType) e.getItem()).equals(WindowShapeType.FUNCTIONAL)){
+						lFriction.setEnabled(true);
 						taFriction.setEnabled(true);
 						bFriction.setEnabled(true);
 						setEnabledDMax(true);
+						rbFormula.setEnabled(true);
 					}else{
+						lFriction.setEnabled(false);
 						taFriction.setEnabled(false);
 						bFriction.setEnabled(false);
-						setEnabledDMax(false);
+						setEnabledDMax(true);
+						if(((WindowShapeType) e.getItem()).equals(WindowShapeType.SQUARE)){
+							rbThreshold.setSelected(true);
+							rbFormula.setEnabled(false);
+						}else{
+							rbFormula.setEnabled(true);
+						}
 					}
 				}
 			}
@@ -1084,9 +1462,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				displayWindowSizeInMeters((Integer) spSize.getValue() * inputMatrix.iterator().next().cellsize());
-				if(((WindowShapeType) cbShape.getSelectedItem()).equals(WindowShapeType.FUNCTIONAL)){
-					setEnabledDMax(true);
-				}
+				setEnabledDMax(true);
 			}
 		});
 		
@@ -1102,7 +1478,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 					
 					//fM.clear();
 					friction = null;
-					frictionMatrix = null;
+					frictionMatrix.clear();
 					
 					if(file.endsWith(".asc")){
 						getController().importAsciiGridFriction((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), frictionMatrix, fc.getSelectedFile().toString());
@@ -1123,10 +1499,32 @@ public abstract class TreatmentPanel extends WizardPanel {
 					
 					//fM.clear();
 					clusterFriction = null;
-					clusterFrictionMatrix = null;
+					clusterFrictionMatrix.clear();
 					
 					if(file.endsWith(".asc")){
 						getController().importAsciiGridFriction((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), clusterFrictionMatrix, fc.getSelectedFile().toString());
+					}
+					
+				}
+			}
+		});
+		
+		bFrictionDistance.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
+					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					
+					String file = fc.getSelectedFile().toString();
+					taFrictionDistance.setText(file);
+					
+					//fM.clear();
+					distanceFriction = null;
+					distanceFrictionMatrix.clear();
+					
+					if(file.endsWith(".asc")){
+						getController().importAsciiGridFriction((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), distanceFrictionMatrix, fc.getSelectedFile().toString());
 					}
 				}
 			}
@@ -1176,8 +1574,16 @@ public abstract class TreatmentPanel extends WizardPanel {
 				displayDeltaInMeters();
 				if(((Integer)spDelta.getValue()) > 1){
 					cbInterpolate.setEnabled(true);
+					lXOrigin.setEnabled(true);
+					spXOrigin.setEnabled(true);
+					lYOrigin.setEnabled(true);
+					spYOrigin.setEnabled(true);
 				}else{
 					cbInterpolate.setEnabled(false);
+					lXOrigin.setEnabled(false);
+					spXOrigin.setEnabled(false);
+					lYOrigin.setEnabled(false);
+					spYOrigin.setEnabled(false);
 				}
 			}
 		});
@@ -1195,6 +1601,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 			}
 		});
 		
+	
 		bPixel.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -1204,6 +1611,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 					
 					taPixel.setText(fc.getSelectedFile().toString());
 					
+					points = null;
 					pixels = CoordinateManager.initWithPixels(fc.getSelectedFile().toString());
 					
 					taPoint.setEnabled(false);
@@ -1246,7 +1654,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 					
 					taPoint.setText(fc.getSelectedFile().toString());
 					
-					pixels = CoordinateManager.initWithPoints(inputMatrix.iterator().next(), fc.getSelectedFile().toString());
+					pixels = null;
+					points = CoordinateManager.initWithPoints(fc.getSelectedFile().toString());
 					
 					taPixel.setEnabled(false);
 					bPixel.setEnabled(false);
@@ -1284,10 +1693,286 @@ public abstract class TreatmentPanel extends WizardPanel {
 					cbCNI.setEnabled(false);
 					tCNI.setEnabled(false);
 					bRunPixel.setEnabled(false);
-					bRunPixel.setEnabled(false);
 				}
 			}
 		});
+		
+		rbFormula.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(cbShape.getSelectedItem().equals(WindowShapeType.SQUARE)){
+					rbUserFormula.setSelected(true);
+					taFormula.setEnabled(false);
+					bDistanceFunction.setEnabled(false);
+					bDistanceImport.setEnabled(false);
+					bDistanceExport.setEnabled(false);
+					rbLinearFunction.setEnabled(false);
+					rbCurveFunctionType1.setEnabled(false);
+					rbCurveFunctionType2.setEnabled(false);
+					rbGaussianFunction.setEnabled(false);
+					bDistancePost.setEnabled(false);
+				}else{
+					if(rbFormula.isSelected()){
+						taFormula.setEnabled(true);
+						bDistanceFunction.setEnabled(true);
+						bDistanceImport.setEnabled(true);
+						bDistanceExport.setEnabled(true);
+						bDistancePost.setEnabled(true);
+						rbLinearFunction.setEnabled(true);
+						rbCurveFunctionType1.setEnabled(true);
+						rbCurveFunctionType2.setEnabled(true);
+						rbGaussianFunction.setEnabled(true);
+					}else{
+						rbUserFormula.setSelected(true);
+						taFormula.setEnabled(false);
+						bDistanceFunction.setEnabled(false);
+						bDistanceImport.setEnabled(false);
+						bDistanceExport.setEnabled(false);
+						rbLinearFunction.setEnabled(false);
+						rbCurveFunctionType1.setEnabled(false);
+						rbCurveFunctionType2.setEnabled(false);
+						rbGaussianFunction.setEnabled(false);
+						bDistancePost.setEnabled(false);
+					}
+				}
+			}
+		});
+		
+		bDistancePost.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(rbLinearFunction.isSelected()){
+					String originPosition = taDistanceOrigin.getText();
+					String originValue = spDistanceOriginValue.getValue().toString();
+					String finalPosition = taDistanceFinal.getText();
+					String finalValue = spDistanceFinalValue.getValue().toString();
+										
+					String formula = "distance*("+finalValue+"/("+finalPosition+")-(("+originPosition+")*"+finalValue+"-("+finalPosition+")*"+originValue+")/(("+finalPosition+")*(("+originPosition+")-("+finalPosition+"))))+(("+originPosition+")*"+finalValue+"-("+finalPosition+")*"+originValue+")/(("+originPosition+")-("+finalPosition+"))";
+					
+					taFormula.setText(taFormula.getText()+formula);
+				}
+				if(rbCurveFunctionType1.isSelected()){
+					String originPosition = taDistanceOrigin.getText();
+					String originValue = spDistanceOriginValue.getValue().toString();
+					String finalPosition = taDistanceFinal.getText();
+					String finalValue = spDistanceFinalValue.getValue().toString();
+					String tilt = spDistanceTilt.getValue().toString(); 
+					
+					String formula = "("+finalValue+"-"+originValue+")*(pow((distance-("+originPosition+"))/(("+finalPosition+")-("+originPosition+")),"+tilt+"))+"+originValue;
+					
+					taFormula.setText(taFormula.getText()+formula);
+				}
+				if(rbCurveFunctionType2.isSelected()){
+					String originPosition = taDistanceOrigin.getText();
+					String originValue = spDistanceOriginValue.getValue().toString();
+					String finalPosition = taDistanceFinal.getText();
+					String finalValue = spDistanceFinalValue.getValue().toString();
+					String tilt = spDistanceTilt.getValue().toString();
+					
+					String formula = "("+originValue+"-"+finalValue+")*(pow((("+finalPosition+")-distance)/(("+finalPosition+")-("+originPosition+")),"+tilt+"))+"+finalValue;
+					taFormula.setText(taFormula.getText()+formula);
+				}
+				if(rbGaussianFunction.isSelected()){
+					String base = spDistanceBaseValue.getValue().toString();
+					String pic = taDistancePic.getText();
+					String picValue = spDistancePicValue.getValue().toString();
+					String q = spDistanceQValue.getValue().toString();
+					
+					String formula = base+"+(exp(-pow((distance-("+pic+"))/(dmax/"+q+"), 2)))*("+picValue+"-"+base+")";
+					
+					taFormula.setText(taFormula.getText()+formula);
+				}
+			}
+		});
+		
+		rbRook.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbRook.isSelected()){
+					spEuclidianCluster.setEnabled(false);
+					spFunctionalCluster.setEnabled(false);
+					lFrictionCluster.setEnabled(false);
+					taFrictionCluster.setEnabled(false);
+					bFrictionCluster.setEnabled(false);
+				}
+			}
+		});
+		
+		rbQueen.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbQueen.isSelected()){
+					spEuclidianCluster.setEnabled(false);
+					spFunctionalCluster.setEnabled(false);
+					lFrictionCluster.setEnabled(false);
+					taFrictionCluster.setEnabled(false);
+					bFrictionCluster.setEnabled(false);
+				}
+			}
+		});
+		
+		rbEuclidianCluster.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbEuclidianCluster.isSelected()){
+					spEuclidianCluster.setEnabled(true);
+					
+					spFunctionalCluster.setEnabled(false);
+					lFrictionCluster.setEnabled(false);
+					taFrictionCluster.setEnabled(false);
+					bFrictionCluster.setEnabled(false);
+				}
+			}
+		});
+		
+		rbFunctionalCluster.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbFunctionalCluster.isSelected()){
+					spFunctionalCluster.setEnabled(true);
+					lFrictionCluster.setEnabled(true);
+					taFrictionCluster.setEnabled(true);
+					bFrictionCluster.setEnabled(true);
+					
+					spEuclidianCluster.setEnabled(false);
+				}
+			}
+		});
+		
+		rbEuclidianDistance.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbEuclidianDistance.isSelected()){
+					lFrictionDistance.setEnabled(false);
+					taFrictionDistance.setEnabled(false);
+					bFrictionDistance.setEnabled(false);
+				}
+			}
+		});
+		
+		rbFunctionalDistance.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbFunctionalDistance.isSelected()){
+					lFrictionDistance.setEnabled(true);
+					taFrictionDistance.setEnabled(true);
+					bFrictionDistance.setEnabled(true);
+				}
+			}
+		});
+		
+		
+		rbGaussianFunction.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbGaussianFunction.isSelected()){
+					lDistanceBaseValue.setEnabled(true);
+					lDistancePic.setEnabled(true);
+					lDistancePicValue.setEnabled(true);
+					lDistanceQValue.setEnabled(true);
+					spDistanceBaseValue.setEnabled(true);
+					taDistancePic.setEnabled(true);
+					spDistancePicValue.setEnabled(true);
+					spDistanceQValue.setEnabled(true);
+				}else{
+					lDistanceBaseValue.setEnabled(false);
+					lDistancePic.setEnabled(false);
+					lDistancePicValue.setEnabled(false);
+					lDistanceQValue.setEnabled(false);
+					spDistanceBaseValue.setEnabled(false);
+					taDistancePic.setEnabled(false);
+					spDistancePicValue.setEnabled(false);
+					spDistanceQValue.setEnabled(false);
+				}
+			}
+		});
+		
+		rbLinearFunction.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbLinearFunction.isSelected()){
+					taDistanceOrigin.setEnabled(true);
+					taDistanceFinal.setEnabled(true);
+					lDistanceOrigin.setEnabled(true);
+					lDistanceFinal.setEnabled(true);
+					lDistanceTilt.setEnabled(true);
+					lDistanceOriginValue.setEnabled(true);
+					lDistanceFinalValue.setEnabled(true);
+					spDistanceOriginValue.setEnabled(true);
+					spDistanceFinalValue.setEnabled(true);
+					spDistanceTilt.setEnabled(false);
+				}else if(!rbCurveFunctionType1.isSelected() && !rbCurveFunctionType2.isSelected()){
+					taDistanceOrigin.setEnabled(false);
+					taDistanceFinal.setEnabled(false);
+					lDistanceOriginValue.setEnabled(false);
+					lDistanceFinalValue.setEnabled(false);
+					spDistanceOriginValue.setEnabled(false);
+					spDistanceFinalValue.setEnabled(false);
+					spDistanceTilt.setEnabled(false);
+					lDistanceOrigin.setEnabled(false);
+					lDistanceFinal.setEnabled(false);
+				}
+			}
+		});
+		
+		rbCurveFunctionType1.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbCurveFunctionType1.isSelected()){
+					taDistanceOrigin.setEnabled(true);
+					taDistanceFinal.setEnabled(true);
+					lDistanceOriginValue.setEnabled(true);
+					lDistanceFinalValue.setEnabled(true);
+					spDistanceOriginValue.setEnabled(true);
+					spDistanceFinalValue.setEnabled(true);
+					spDistanceTilt.setEnabled(true);
+					lDistanceOrigin.setEnabled(true);
+					lDistanceFinal.setEnabled(true);
+					lDistanceTilt.setEnabled(true);
+				}else if(!rbLinearFunction.isSelected() && !rbCurveFunctionType2.isSelected()){
+					taDistanceOrigin.setEnabled(false);
+					taDistanceFinal.setEnabled(false);
+					lDistanceOriginValue.setEnabled(false);
+					lDistanceFinalValue.setEnabled(false);
+					spDistanceOriginValue.setEnabled(false);
+					spDistanceFinalValue.setEnabled(false);
+					spDistanceTilt.setEnabled(false);
+					lDistanceOrigin.setEnabled(false);
+					lDistanceFinal.setEnabled(false);
+					lDistanceTilt.setEnabled(false);
+				}
+			}
+		});
+		
+		rbCurveFunctionType2.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				if(rbCurveFunctionType2.isSelected()){
+					taDistanceOrigin.setEnabled(true);
+					taDistanceFinal.setEnabled(true);
+					lDistanceOriginValue.setEnabled(true);
+					lDistanceFinalValue.setEnabled(true);
+					spDistanceOriginValue.setEnabled(true);
+					spDistanceFinalValue.setEnabled(true);
+					spDistanceTilt.setEnabled(true);
+					lDistanceOrigin.setEnabled(true);
+					lDistanceFinal.setEnabled(true);
+					lDistanceTilt.setEnabled(true);
+				}else if(!rbLinearFunction.isSelected() && !rbCurveFunctionType1.isSelected()){
+					taDistanceOrigin.setEnabled(false);
+					taDistanceFinal.setEnabled(false);
+					lDistanceOriginValue.setEnabled(false);
+					lDistanceFinalValue.setEnabled(false);
+					spDistanceOriginValue.setEnabled(false);
+					spDistanceFinalValue.setEnabled(false);
+					spDistanceTilt.setEnabled(false);
+					lDistanceOrigin.setEnabled(false);
+					lDistanceFinal.setEnabled(false);
+					lDistanceTilt.setEnabled(false);
+				}
+			}
+		});
+		
 		
 		cbMinDistance.addChangeListener(new ChangeListener(){
 			@Override
@@ -1474,6 +2159,37 @@ public abstract class TreatmentPanel extends WizardPanel {
 			}
 		});
 		
+		bViewFuzionAscii.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(!tFuzion.getSelectionModel().isSelectionEmpty()){
+					int row = tFuzion.getSelectedRows()[0];
+					String ascii = (String) tFuzion.getModel().getValueAt(row, 0);
+					MatrixManager.visualize(ascii);
+				}
+			}
+		});
+		
+		tFuzion.getModel().addTableModelListener(new TableModelListener(){
+			@Override
+			public void tableChanged(TableModelEvent e) {
+				if(tFuzion.getModel().getRowCount() > 0){
+					bRemoveFuzionAscii.setEnabled(true);
+				}else{
+					bRemoveFuzionAscii.setEnabled(false);
+				}
+			}
+		});
+		
+		bRemoveFuzionAscii.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				((DefaultTableModel) tFuzion.getModel()).removeRow(tFuzion.getModel().getRowCount()-1);
+				inputMatrix3.remove(inputMatrix3.size()-1);
+				index3--;
+			}
+		});
+		
 		bMatrixRemove.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -1644,6 +2360,32 @@ public abstract class TreatmentPanel extends WizardPanel {
 					LocalContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					taOutputFolder.setText(fc.getSelectedFile().toString());
+				}
+			}
+		});
+		
+		bOutputFolder2.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				if(fc.showSaveDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
+					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					
+					taOutputFolder2.setText(fc.getSelectedFile().toString());
+				}
+			}
+		});
+		
+		bOutputFolder3.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				if(fc.showSaveDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
+					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					
+					taOutputFolder3.setText(fc.getSelectedFile().toString());
 				}
 			}
 		});
@@ -2000,6 +2742,57 @@ public abstract class TreatmentPanel extends WizardPanel {
 				}
 			}
 		});
+		
+		bDistanceExport.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
+					//System.out.println(fc.getSelectedFile().toString());
+					String functionFile = fc.getSelectedFile().toString();
+					if(!functionFile.endsWith(".txt")){
+						functionFile += ".txt";
+					}
+					try{
+						Properties properties = new Properties();
+						properties.setProperty("formula", taFormula.getText());
+							
+						FileOutputStream out = new FileOutputStream(functionFile);
+						properties.store(out, "");
+						out.close();
+				
+					}catch(FileNotFoundException ex){
+						ex.printStackTrace();
+					}catch(IOException ex){
+						ex.printStackTrace();
+					}
+				}
+			}
+		});
+		
+		bDistanceImport.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
+					//System.out.println(fc.getSelectedFile().toString());
+					String functionFile = fc.getSelectedFile().toString();
+					try{
+						Properties properties = new Properties();
+						FileInputStream in = new FileInputStream(functionFile);
+						properties.load(in);
+						in.close();
+							
+						taFormula.setText(properties.getProperty("formula"));
+								
+					}catch(FileNotFoundException ex){
+						ex.printStackTrace();
+					}catch(IOException ex){
+						ex.printStackTrace();
+					}
+				}
+			}
+		});
 	}
 	
 	public void displayAttributes(String inputShape, boolean fromFile, Map<String, String> attributes, double[] envelope){
@@ -2145,7 +2938,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 			spcellsize.setValue(Double.parseDouble(st.nextToken()));
 
 			line = br.readLine();
-			if(line != null && line.equals("")){
+			if(line != null && !line.equals("")){
 				st = new StringTokenizer(line, " ");
 				if(st != null && st.hasMoreTokens()){
 					if (st.nextToken().equalsIgnoreCase("NODATA_value")) {
@@ -2169,9 +2962,11 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	private static void setEnabledDMax(boolean enabled){
 		if(enabled){
-			lFriction.setText("dMax = "+(((Integer) spSize.getValue()-1)/2)*inputMatrix.iterator().next().cellsize()+" m     friction file :");
+			lDMax.setText("dmax = "+(((Integer) spSize.getValue()-1)/2)*inputMatrix.iterator().next().cellsize()+" meters");
+			//lFriction.setText("dMax = "+(((Integer) spSize.getValue()-1)/2)*inputMatrix.iterator().next().cellsize()+" m     friction file :");
 		}else{
-			lFriction.setText("friction file :");
+			lDMax.setText("");
+			//lFriction.setText("friction file :");
 		}
 	}
 	
@@ -2215,7 +3010,6 @@ public abstract class TreatmentPanel extends WizardPanel {
 				}
 			}
 			for(String metric : MatrixMetricManager.getCoupleMetricNames(values)){
-				System.out.println(metric);
 				vec = new Vector<String>();
 				vec.add(metric);
 				((DefaultTableModel) tLMetrics.getModel()).addRow(vec);
@@ -2251,7 +3045,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 				((DefaultTableModel) tLMetrics.getModel()).addRow(vec);
 			} 
 			break;
-		case "diversity metrics": 
+		case "heterogeneity metrics": 
 			values = new HashSet<Integer>();
 			for(Matrix m : inputMatrix){
 				for(double v : m.values()){
@@ -2333,9 +3127,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		((DefaultTableModel) tMatrix.getModel()).addRow(v);
 		
 		tMatrix.setEnabled(true);
-		taOutputFolder.setEnabled(true);
-		bOutputFolder.setEnabled(true);
-		viewAsciiOutput.setEnabled(true);
+		taOutputFolder2.setEnabled(true);
+		bOutputFolder2.setEnabled(true);
+		viewAsciiOutput2.setEnabled(true);
 		
 		//enabledImportation();
 	}
@@ -2344,13 +3138,14 @@ public abstract class TreatmentPanel extends WizardPanel {
 		
 		Vector<String> v = new Vector<String>();
 		v.add(ascii);
-		v.add("1.0");
+		v.add("m"+(++index3));
 		((DefaultTableModel) tFuzion.getModel()).addRow(v);
 		
 		tFuzion.setEnabled(true);
-		taOutputFolder.setEnabled(true);
-		bOutputFolder.setEnabled(true);
-		viewAsciiOutput.setEnabled(true);
+		bViewFuzionAscii.setEnabled(true);
+		taOutputFolder3.setEnabled(true);
+		bOutputFolder3.setEnabled(true);
+		viewAsciiOutput3.setEnabled(true);
 	}
 	
 	public void displayIhm4(String ascii){
@@ -2380,16 +3175,16 @@ public abstract class TreatmentPanel extends WizardPanel {
 	}
 	
 	public static void displayValues(){
-		
-		for(; 0<tCIM.getRowCount();){
-			tCIM.removeRow(0);
-			tFM.removeRow(0);
-			tDistancesModel.removeRow(0);
+				
+		for(int r=tCIM.getRowCount()-1; r>=0; r--){
+			tCIM.removeRow(r);
+			tFM.removeRow(r);
+			tDistancesModel.removeRow(r);
 		}
 		
-		for(; 0<tCNIM.getRowCount();){
-			tCNIM.removeRow(0);
-			tNFM.removeRow(0);
+		for(int r=tCNIM.getRowCount()-1; r>=0 ;r--){
+			tCNIM.removeRow(r);
+			tNFM.removeRow(r);
 		}
 		
 		Set<Integer> values = new TreeSet<Integer>();
@@ -2397,7 +3192,6 @@ public abstract class TreatmentPanel extends WizardPanel {
 			values.addAll(m.values());
 		}
 		values.add(Raster.getNoDataValue());
-		
 		Vector<Integer> vec;
 		for(Integer v : values){
 			vec = new Vector<Integer>();
@@ -2473,6 +3267,22 @@ public abstract class TreatmentPanel extends WizardPanel {
 		pValues.setViewportView(tChanges);
 	}
 	
+	public void enabledIhmforCsv() {
+		spncols.setEnabled(true);
+		spnrows.setEnabled(true);
+		spxllcorner.setEnabled(true);
+		spyllcorner.setEnabled(true);
+		spcellsize.setEnabled(true);
+		spnodatavalue.setEnabled(true);
+		bHeader.setEnabled(true);
+		bmVAll.setEnabled(true);
+		bmVAdd.setEnabled(true);
+		bmVRem.setEnabled(true);
+		taOutputFolder.setEnabled(true);
+		bOutputFolder.setEnabled(true);
+		viewAsciiOutput.setEnabled(true);
+	}
+	
 	public void enabledIhm() {
 		bViewAsciiInput.setEnabled(true);
 		cbType.setEnabled(true);
@@ -2508,16 +3318,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		pValues.setEnabled(true);
 		spNoData.setEnabled(true);
 		bSort.setEnabled(true);
-		bmVAll.setEnabled(true);
-		bmVAdd.setEnabled(true);
-		bmVRem.setEnabled(true);
-		spncols.setEnabled(true);
-		spnrows.setEnabled(true);
-		spxllcorner.setEnabled(true);
-		spyllcorner.setEnabled(true);
-		spcellsize.setEnabled(true);
-		spnodatavalue.setEnabled(true);
-		bHeader.setEnabled(true);
+
 		spCellsize.setEnabled(true);
 		bsSFAdd.setEnabled(true);
 		bsSFRem.setEnabled(true);
@@ -2528,14 +3329,23 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bNewClassification.setEnabled(true);
 		bRemoveClassification.setEnabled(true);
 		tClassification.setEnabled(true);
+		
 		rbRook.setEnabled(true);
 		rbQueen.setEnabled(true);
+		rbEuclidianCluster.setEnabled(true);
+		rbFunctionalCluster.setEnabled(true);
+		
 		rbEuclidianDistance.setEnabled(true);
-		spEuclidianDistanceCluster.setEnabled(true);
 		rbFunctionalDistance.setEnabled(true);
-		spFunctionalDistanceCluster.setEnabled(true);
-		taFrictionCluster.setEnabled(true);
-		bFrictionCluster.setEnabled(true);
+		
+		cbMaxDistance.setEnabled(true);
+		
+		taFrictionDistance.setEnabled(true);
+		setEnabledDMax(true);
+		rbThreshold.setEnabled(true);
+		rbFormula.setEnabled(true);
+	
+		spMinimumTotalArea.setEnabled(true);
 	}
 	
 	public static void enabledAfterDispatch(){
@@ -2663,7 +3473,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	public void importFrictionMatrix(Properties properties){
 		if(properties.containsKey("friction_ascii")){
-			String prop = properties.getProperty("friction");
+			String prop = properties.getProperty("friction_ascii");
 			taFriction.setText(prop);
 			getController().importAsciiGridFriction(this, frictionMatrix, prop);
 		}
@@ -2758,6 +3568,20 @@ public abstract class TreatmentPanel extends WizardPanel {
 		}
 	}
 	
+	public void importXOrigin(Properties properties){
+		if(properties.containsKey("x_origin")){
+			int xo = Integer.parseInt(properties.getProperty("x_origin"));
+			spXOrigin.setValue(xo);
+		}
+	}
+	
+	public void importYOrigin(Properties properties){
+		if(properties.containsKey("y_origin")){
+			int yo = Integer.parseInt(properties.getProperty("y_origin"));
+			spYOrigin.setValue(yo);
+		}
+	}
+	
 	public void importInterpolation(Properties properties){
 		if(properties.containsKey("interpolation")){
 			cbInterpolate.setSelected(Boolean.parseBoolean(properties.getProperty("interpolation")));
@@ -2770,6 +3594,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 			rbPixel.setSelected(true);
 			taPixel.setText(properties.getProperty("pixels"));
 			pixels = CoordinateManager.initWithPixels(taPixel.getText());
+			points = null;
 		}
 	}
 	
@@ -2778,7 +3603,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 		if(properties.containsKey("points")){
 			rbPoint.setSelected(true);
 			taPoint.setText(properties.getProperty("points"));
-			pixels = CoordinateManager.initWithPoints(inputMatrix.iterator().next(), taPoint.getText());
+			points = CoordinateManager.initWithPoints(taPoint.getText());
+			pixels = null;
 		}
 	}
 	
@@ -2893,8 +3719,14 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	public void importMetrics(Properties properties){
 		if(properties.containsKey("metrics")){
+			int count = ((DefaultTableModel) tCMetrics.getModel()).getRowCount();
+			for(int i=0; i<count; i++){
+				((DefaultTableModel) tCMetrics.getModel()).removeRow(0);	
+			}
+			
 			String prop = properties.getProperty("metrics");
 			prop = prop.replace("{", "").replace("}", "").replace(" ", "");
+			
 			String[] ms = prop.split(";");
 			Vector<String> vs;
 			for(String m : ms){
@@ -2990,6 +3822,20 @@ public abstract class TreatmentPanel extends WizardPanel {
 		}
 	}
 	
+	public void importOutputFolder2(Properties properties){
+		taOutputFolder2.setText("");
+		if(properties.containsKey("output_folder")){
+			taOutputFolder2.setText(properties.getProperty("output_folder"));
+		}
+	}
+	
+	public void importOutputFolder3(Properties properties){
+		taOutputFolder3.setText("");
+		if(properties.containsKey("output_folder")){
+			taOutputFolder3.setText(properties.getProperty("output_folder"));
+		}
+	}
+	
 	public void importCsvOutput(Properties properties){
 		taCsvOutput.setText("");
 		if(properties.containsKey("output_csv")){
@@ -3012,6 +3858,37 @@ public abstract class TreatmentPanel extends WizardPanel {
 	public void importVisualizeAscii(Properties properties){
 		if(properties.containsKey("visualize_ascii")){
 			viewAsciiOutput.setSelected(Boolean.parseBoolean(properties.getProperty("visualize_ascii")));
+		}
+	}
+	
+	public void importVisualizeAscii2(Properties properties){
+		if(properties.containsKey("visualize_ascii")){
+			viewAsciiOutput2.setSelected(Boolean.parseBoolean(properties.getProperty("visualize_ascii")));
+		}
+	}
+	
+	public void importVisualizeAscii3(Properties properties){
+		if(properties.containsKey("visualize_ascii")){
+			viewAsciiOutput3.setSelected(Boolean.parseBoolean(properties.getProperty("visualize_ascii")));
+		}
+	}
+	
+	public void importDistanceFunction(Properties properties) {
+		if(properties.containsKey("distance_function")){
+			String distanceFunction = properties.getProperty("distance_function");
+			if(!distanceFunction.equalsIgnoreCase("")){
+				taFormula.setText(distanceFunction);
+				rbFormula.setSelected(true);
+			}else{
+				rbThreshold.setSelected(true);
+			}
+		}
+	}
+	
+	public void importCombination(Properties properties) {
+		if(properties.containsKey("combination")){
+			String combination = properties.getProperty("combination");
+			taCombination.setText(combination);
 		}
 	}
 	
@@ -3050,6 +3927,40 @@ public abstract class TreatmentPanel extends WizardPanel {
 					}
 				}
 			}
+		}
+	}
+	
+	public void importDistanceType(Properties properties){
+		if(properties.containsKey("distance_type")){
+			String prop = properties.getProperty("distance_type");
+			if(prop.equalsIgnoreCase("euclidian")){
+				rbEuclidianDistance.setSelected(true);
+			}else if(prop.equalsIgnoreCase("functional")){
+				rbFunctionalDistance.setSelected(true);
+			}
+		}
+	}
+	
+	public void importMaxDistance(Properties properties){
+		if(properties.containsKey("max_distance")){
+			String prop = properties.getProperty("max_distance");
+			cbMaxDistance.setSelected(true);
+			spMaxDistance.setValue(Double.parseDouble(prop));
+		}
+	}
+	
+	public void importDistanceFriction(Properties properties){
+		if(properties.containsKey("distance_friction")){
+			String prop = properties.getProperty("distance_friction");
+			taFrictionDistance.setText(prop);
+		}
+	}
+	
+	public void importDistanceFrictionMatrix(Properties properties){
+		if(properties.containsKey("distance_friction_ascii")){
+			String prop = properties.getProperty("distance_friction_ascii");
+			taFrictionDistance.setText(prop);
+			getController().importAsciiGridFriction(this, distanceFrictionMatrix, prop);
 		}
 	}
 	
@@ -3113,9 +4024,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 			}else if(prop.equalsIgnoreCase("queen")){
 				rbQueen.setSelected(true);
 			}else if(prop.equalsIgnoreCase("euclidian")){
-				rbEuclidianDistance.setSelected(true);
+				rbEuclidianCluster.setSelected(true);
 			}else if(prop.equalsIgnoreCase("functional")){
-				rbFunctionalDistance.setSelected(true);
+				rbFunctionalCluster.setSelected(true);
 			}
 		}
 	}
@@ -3123,8 +4034,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 	public void importClusterDistance(Properties properties){
 		if(properties.containsKey("cluster_distance")){
 			String prop = properties.getProperty("cluster_distance");
-			spEuclidianDistanceCluster.setValue(Double.parseDouble(prop));
-			spFunctionalDistanceCluster.setValue(Double.parseDouble(prop));
+			spEuclidianCluster.setValue(Double.parseDouble(prop));
+			spFunctionalCluster.setValue(Double.parseDouble(prop));
 		}
 	}
 	
@@ -3162,6 +4073,13 @@ public abstract class TreatmentPanel extends WizardPanel {
 					}
 				}
 			}
+		}
+	}
+	
+	public void importMinimumTotalArea(Properties properties){
+		if(properties.containsKey("minimum_total_area")){
+			Double prop = new Double(properties.getProperty("minimum_total_area"));
+			spMinimumTotalArea.setValue(prop);
 		}
 	}
 	
@@ -3256,14 +4174,14 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	public void exportFriction(Properties properties){
 		WindowShapeType shape = (WindowShapeType) cbShape.getSelectedItem();
-		if(shape.equals(WindowShapeType.FUNCTIONAL) && frictionMatrix == null){
+		if(shape.equals(WindowShapeType.FUNCTIONAL) && frictionMatrix.size() == 0){
 			properties.setProperty("friction", taFriction.getText());
 		}
 	}
 	
 	public void exportFrictionMatrix(Properties properties){
 		WindowShapeType shape = (WindowShapeType) cbShape.getSelectedItem();
-		if(shape.equals(WindowShapeType.FUNCTIONAL) && frictionMatrix != null){
+		if(shape.equals(WindowShapeType.FUNCTIONAL) && frictionMatrix.size() != 0){
 			properties.setProperty("friction_ascii", taFriction.getText());
 		}
 	}
@@ -3312,6 +4230,18 @@ public abstract class TreatmentPanel extends WizardPanel {
 
 	public void exportDeltaDisplacement(Properties properties){
 		properties.setProperty("delta_displacement", spDelta.getValue().toString());
+	}
+	
+	public void exportXOrigin(Properties properties){
+		if(((Integer) spDelta.getValue()) > 1){
+			properties.setProperty("x_origin", spXOrigin.getValue().toString());
+		}
+	}
+	
+	public void exportYOrigin(Properties properties){
+		if(((Integer) spDelta.getValue()) > 1){
+			properties.setProperty("y_origin", spYOrigin.getValue().toString());
+		}
 	}
 	
 	public void exportInterpolation(Properties properties){
@@ -3453,6 +4383,18 @@ public abstract class TreatmentPanel extends WizardPanel {
 		}
 	}
 	
+	public void exportOutputFolder2(Properties properties){
+		if(!taOutputFolder2.getText().equalsIgnoreCase("")){
+			properties.setProperty("output_folder", taOutputFolder2.getText());
+		}
+	}
+	
+	public void exportOutputFolder3(Properties properties){
+		if(!taOutputFolder3.getText().equalsIgnoreCase("")){
+			properties.setProperty("output_folder", taOutputFolder3.getText());
+		}
+	}
+	
 	public void exportCsvOutput(Properties properties){
 		if(!taCsvOutput.getText().equalsIgnoreCase("")){
 			properties.setProperty("output_csv", taCsvOutput.getText());
@@ -3469,6 +4411,24 @@ public abstract class TreatmentPanel extends WizardPanel {
 
 	public void exportVisualizeAscii(Properties properties){
 		properties.setProperty("visualize_ascii", new Boolean(viewAsciiOutput.isSelected()).toString());
+	}
+	
+	public void exportVisualizeAscii2(Properties properties){
+		properties.setProperty("visualize_ascii", new Boolean(viewAsciiOutput2.isSelected()).toString());
+	}
+	
+	public void exportVisualizeAscii3(Properties properties){
+		properties.setProperty("visualize_ascii", new Boolean(viewAsciiOutput3.isSelected()).toString());
+	}
+	
+	public void exportDistanceFunction(Properties properties){
+		if(rbFormula.isSelected()){
+			properties.setProperty("distance_function", taFormula.getText());
+		}
+	}
+	
+	public void exportCombination(Properties properties){
+		properties.setProperty("combination", taCombination.getText());
 	}
 	
 	public void exportNoDataValue(Properties properties){
@@ -3511,6 +4471,33 @@ public abstract class TreatmentPanel extends WizardPanel {
 		properties.setProperty("distance_from", sb.toString());
 	}
 	
+	public void exportDistanceType(Properties properties){
+		if(rbEuclidianDistance.isSelected()){
+			properties.setProperty("distance_type", "euclidian");
+		}else if(rbFunctionalDistance.isSelected()){
+			properties.setProperty("distance_type", "functional");
+		}
+	}
+	
+	public void exportMaxDistance(Properties properties){
+		if(cbMaxDistance.isSelected()){
+			double d = (double) spMaxDistance.getModel().getValue();
+			properties.setProperty("max_distance", d+"");
+		}
+	}
+	
+	public void exportDistanceFriction(Properties properties){
+		if(rbFunctionalDistance.isSelected() && distanceFrictionMatrix.size() == 0){
+			properties.setProperty("distance_friction", taFrictionDistance.getText());
+		}
+	}
+	
+	public void exportDistanceFrictionMatrix(Properties properties){
+		if(rbFunctionalDistance.isSelected() && distanceFrictionMatrix.size() != 0){
+			properties.setProperty("distance_friction_ascii", taFrictionDistance.getText());
+		}
+	}
+	
 	public void exportCluster(Properties properties){
 		StringBuffer sb = new StringBuffer();
 		sb.append('{');
@@ -3549,32 +4536,32 @@ public abstract class TreatmentPanel extends WizardPanel {
 			properties.setProperty("cluster_type", "rook");
 		}else if(rbQueen.isSelected()){
 			properties.setProperty("cluster_type", "queen");
-		}else if(rbEuclidianDistance.isSelected()){
+		}else if(rbEuclidianCluster.isSelected()){
 			properties.setProperty("cluster_type", "euclidian");
-		}else if(rbFunctionalDistance.isSelected()){
+		}else if(rbFunctionalCluster.isSelected()){
 			properties.setProperty("cluster_type", "functional");
 		}
 	}
 	
 	public void exportClusterDistance(Properties properties){
-		if(rbEuclidianDistance.isSelected()){
-			double d = (double) spEuclidianDistanceCluster.getModel().getValue();
+		if(rbEuclidianCluster.isSelected()){
+			double d = (double) spEuclidianCluster.getModel().getValue();
 			properties.setProperty("cluster_distance", d+"");
-		}else if(rbFunctionalDistance.isSelected()){
-			double d = (double) spFunctionalDistanceCluster.getModel().getValue();
+		}else if(rbFunctionalCluster.isSelected()){
+			double d = (double) spFunctionalCluster.getModel().getValue();
 			properties.setProperty("cluster_distance", d+"");
 		}
 	}
 	
 	public void exportClusterFriction(Properties properties){
-		if(rbFunctionalDistance.isSelected() && clusterFrictionMatrix == null){
+		if(rbFunctionalCluster.isSelected() && clusterFrictionMatrix.size() == 0){
 			String f = taFrictionCluster.getText();
 			properties.setProperty("cluster_friction", f);
 		}
 	}
 	
 	public void exportClusterFrictionMatrix(Properties properties){
-		if(rbFunctionalDistance.isSelected() && clusterFrictionMatrix != null){
+		if(rbFunctionalCluster.isSelected() && clusterFrictionMatrix.size() != 0){
 			String f = taFrictionCluster.getText();
 			properties.setProperty("cluster_friction_ascii", f);
 		}
@@ -3617,6 +4604,12 @@ public abstract class TreatmentPanel extends WizardPanel {
 		}
 		sb.append('}');
 		properties.setProperty("filter_values", sb.toString());
+	}
+	
+	public void exportMinimumTotalArea(Properties properties){
+		if(((double) spMinimumTotalArea.getValue()) > 0){
+			properties.setProperty("minimum_total_area", ((double) spMinimumTotalArea.getValue())+"");
+		}
 	}
 	
 	public void cleanDomains() {
