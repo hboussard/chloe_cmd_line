@@ -47,7 +47,7 @@ public class SearchAndReplacePanel extends TreatmentPanel {
 		c.anchor = GridBagConstraints.LINE_START;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		add(taAsciiInput, c);
+		add(taMatrixInput, c);
 		
 		c.gridx = 4;
 		c.gridy = 1;
@@ -56,11 +56,11 @@ public class SearchAndReplacePanel extends TreatmentPanel {
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		c.weighty = 0;
-		add(bAsciiInput, c);
+		add(bMatrixCollectionInput, c);
 
 		c.gridx = 5;
 		c.gridy = 1;
-		add(bViewAsciiInput, c);
+		add(bViewMatrixInput, c);
 		
 		c.gridx = 0;
 		c.gridy = 3;
@@ -132,7 +132,7 @@ public class SearchAndReplacePanel extends TreatmentPanel {
 		boolean validate = true;
 		
 		for(Matrix m : inputMatrix){
-			asciis.add(m.getFile());
+			inputAsciiGrids.add(m.getFile());
 		}
 		
 		values = new HashMap<Integer, Number>();
@@ -159,7 +159,7 @@ public class SearchAndReplacePanel extends TreatmentPanel {
 	
 	@Override
 	public void doImport(Properties properties) {
-		importInputAscii(properties);
+		importInputMatrix(properties);
 		importChanges(properties);
 		importNoDataValue(properties);
 		importOutputFolder(properties);
@@ -169,7 +169,7 @@ public class SearchAndReplacePanel extends TreatmentPanel {
 	
 	@Override
 	public void doExport(Properties properties){
-		exportInputAscii(properties);
+		exportInputMatrix(properties);
 		exportChanges(properties);
 		exportNoDataValue(properties);
 		exportOutputFolder(properties);
@@ -179,6 +179,6 @@ public class SearchAndReplacePanel extends TreatmentPanel {
 
 	@Override
 	public void run() {
-		getController().runSearchAndReplace(asciis, (Integer) spNoData.getValue(), values, taOutputFolder.getText(), viewAsciiOutput.isSelected());
+		getController().runSearchAndReplace(inputAsciiGrids, (Integer) spNoData.getValue(), values, taOutputFolder.getText(), viewAsciiOutput.isSelected());
 	}
 }

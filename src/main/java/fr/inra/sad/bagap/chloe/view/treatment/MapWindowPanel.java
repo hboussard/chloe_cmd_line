@@ -46,7 +46,7 @@ public class MapWindowPanel extends TreatmentPanel {
 		c.anchor = GridBagConstraints.LINE_START;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		add(taAsciiInput, c);
+		add(taMatrixInput, c);
 		
 		c.gridx = 4;
 		c.gridy = 1;
@@ -55,11 +55,11 @@ public class MapWindowPanel extends TreatmentPanel {
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		c.weighty = 0;
-		add(bAsciiInput, c);
+		add(bMatrixCollectionInput, c);
 		
 		c.gridx = 5;
 		c.gridy = 1;
-		add(bViewAsciiInput, c);
+		add(bViewMatrixInput, c);
 		
 		c.gridx = 0;
 		c.gridy = 3;
@@ -153,14 +153,14 @@ public class MapWindowPanel extends TreatmentPanel {
 	
 	@Override
 	public void doImport(Properties properties) {
-		importInputAscii(properties);
+		importInputMatrix(properties);
 		importMetrics(properties);
 		importCsvOutput(properties);
 	}
 	
 	@Override
 	public void doExport(Properties properties){
-		exportInputAscii(properties);
+		exportInputMatrix(properties);
 		exportMetrics(properties);
 		exportCsvOutput(properties);
 	}

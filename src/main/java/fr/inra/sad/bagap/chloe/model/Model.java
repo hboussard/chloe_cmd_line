@@ -12,9 +12,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.data.shapefile.dbf.DbaseFileHeader;
 import org.geotools.data.shapefile.dbf.DbaseFileReader;
 import org.geotools.data.shapefile.files.ShpFiles;
@@ -30,16 +32,19 @@ import fr.inra.sad.bagap.apiland.analysis.Analysis;
 import fr.inra.sad.bagap.apiland.analysis.AnalysisObserver;
 import fr.inra.sad.bagap.apiland.analysis.AnalysisState;
 import fr.inra.sad.bagap.apiland.analysis.matrix.ChamferDistance;
+import fr.inra.sad.bagap.apiland.analysis.matrix.HugeChamferDistance;
 import fr.inra.sad.bagap.apiland.analysis.matrix.RCMDistanceCalculation;
-import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringDistanceAnalysis;
+//import fr.inra.sad.bagap.apiland.analysis.matrix.RCMDistanceUsingPenteInverseCalculation;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringOutput;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringRook;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.GroupDistanceAnalysis;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.NewClusteringQueenAnalysis;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.NewClusteringRookAnalysis;
-import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringQueen;
 import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.Classification;
 import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.Pixel2PixelMatrixCalculation;
+import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.ascii.ClassificationPixel2PixelAsciiGridCalculation;
+import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.ascii.OverlayPixel2PixelAsciiGridCalculation;
+import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.ascii.Pixel2PixelAsciiGridCalculation;
 import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.combination.CombinationExpressionFactory;
 import fr.inra.sad.bagap.apiland.analysis.matrix.util.AsciiGridManager;
 import fr.inra.sad.bagap.apiland.analysis.matrix.util.ExportAsciiGridFromShapefileAnalysis;
@@ -53,6 +58,7 @@ import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.CoordinateManager
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Friction;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.JaiMatrixFactory;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Matrix;
+import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.MatrixFactory;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.MatrixManager;
 import fr.inra.sad.bagap.apiland.domain.Domain;
 import fr.inra.sad.bagap.apiland.treatment.Treatment;
@@ -546,6 +552,8 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			
 			//Matrix m = JaiMatrixFactory.get().createWithAsciiGrid(ascii);
 			Matrix m = JaiMatrixFactory.get().createWithAsciiGridOld(ascii, read);
+			//Matrix m = ArrayMatrixFactory.get().createWithAsciiGrid(ascii, read);
+			//Matrix m = ArrayMatrix2Factory.get().createWithAsciiGrid(ascii, read);
 			
 			matrix.add(m);
 			
@@ -586,7 +594,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 			publish("import shapefile "+shape);
 			ShpFiles sf = new ShpFiles(shape);
 			
-			ShapefileReader sfr = new ShapefileReader(sf, true, false, new com.vividsolutions.jts.geom.GeometryFactory());
+			ShapefileReader sfr = new ShapefileReader(sf, true, false, new org.locationtech.jts.geom.GeometryFactory());
 			ShapefileHeader sfh = sfr.getHeader();
 			envelope[0] = sfh.minX();
 			envelope[1] = sfh.maxX();
@@ -706,6 +714,8 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 	public boolean runSearchAndReplace(boolean batch, Set<String> asciis, int noData, Map<Integer, Number> changes, String outputFolder, String outputAsc, boolean viewAscii) {
 		this.batch = batch;
 		try{
+			
+			
 			String out;
 			for(String ascii : asciis){
 				publish("search and replace : "+ascii);
@@ -735,8 +745,9 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 	public boolean cleanAsciiGrid(String ascii) {
 		try{
 			publish("clean ascii grid file : "+ascii);
-			
-			AsciiGridManager.clean(ascii, ascii);
+			if(ascii.endsWith(".asc") || ascii.endsWith(".ASC") || ascii.endsWith(".Asc")){
+				AsciiGridManager.clean(ascii, ascii);
+			}
 			
 			return true;
 		}catch(Exception ex){
@@ -816,19 +827,82 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				progress = 0;
 				
 				Matrix mDistance = null;
+				GridCoverage2D cDistance = null;
 				switch(typeDistance){
 				case "euclidian" : 
+					
 					ChamferDistance cd = new ChamferDistance(m, values, distance);
 					cd.addObserver(this);
 					mDistance = cd.allRun();
+					
+					/*
+					String tt;
+					String[] ttt;
+					
+					tt = "1116.0 1075.0 1039.0 1005.0 975.0 949.0 925.0 906.0 894.0 889.0 884.0 889.0 894.0 906.0 925.0 949.0 975.0 1005.0 1039.0 1075.0 1038.0 972.0 906.0 840.0 775.0 710.0 645.0 582.0 519.0 456.0 397.0 340.0 288.0 245.0 215.0 204.0 204.0 215.0 245.0 272.0 280.0 304.0 340.0 288.0 245.0 215.0 204.0 204.0 204.0 215.0 245.0 288.0 340.0 397.0 456.0 519.0 582.0 645.0 710.0 775.0 840.0 906.0 972.0 1038.0 1105.0 1172.0 1239.0 1307.0 1375.0 1443.0 1511.0 1579.0 1647.0 1715.0 1783.0 1851.0 1919.0 1987.0 2055.0 2123.0 2191.0 2259.0 2327.0 2304.0 2260.0 2208.0 2164.0 2120.0 2076.0 2032.0 1988.0 1945.0 1905.0 1867.0 1833.0 1799.0 1765.0 1735.0 1709.0 1683.0";
+					ttt = tt.split(" ");
+					System.out.println("1ere ligne "+ttt.length);
+					
+					tt = "549.0 544.0 544.0 544.0 544.0 519.0 495.0 481.0 476.0 476.0 481.0 495.0 519.0 544.0 544.0 544.0 549.0 560.0 582.0 608.0 612.0 612.0 617.0 626.0 645.0 671.0 701.0 735.0 776.0 820.0 864.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 889.0 894.0 906.0 925.0 949.0 925.0 872.0 820.0 768.0 724.0 672.0 628.0 585.0 549.0 519.0 495.0 481.0 476.0 476.0 481.0 490.0 456.0 430.0 413.0 408.0 408.0 408.0 408.0 408.0 408.0 408.0 408.0 408.0 413.0 430.0 456.0 490.0 532.0 576.0 628.0 671.0 645.0 626.0 617.0 612.0 612.0 608.0 549.0 490.0 436.0 384.0 340.0 304.0 280.0 272.0";
+					
+					ttt = tt.split(" ");
+					System.out.println("2eme ligne "+ttt.length);
+				*/
+					/*
+					HugeChamferDistance hcd = new HugeChamferDistance(m.getFile(), values, (float) distance);
+					hcd.addObserver(this);
+					cDistance = (GridCoverage2D) hcd.allRun();
+					*/
+					//float[] fDistance = (float[]) hcd.allRun();
+					/*
+					
+					GridCoverage2D gc = CoverageManager.get(m.getFile());
+					CoverageManager.exportAsciiGrid(gc, outputFolder+"/"+name+"_test1-"+values+".asc");
+					
+					
+					float[] fd = CoverageManager.getData(gc, 0, 0, 144, 138);
+					GridCoverage2D gc2 = CoverageManager.getCoverageFromData(fd, 144, 138);
+					CoverageManager.exportAsciiGrid(gc2, outputFolder+"/"+name+"_test2-"+values+".asc");
+					*/
+					/*
+					 * 
+					System.out.println((NoDataContainer) gc.getProperty("GC_NODATA"));
+					NoDataContainer ndc = (NoDataContainer) gc.getProperty("GC_NODATA");
+					System.out.println("nodata_value est "+ndc.getAsSingleValue());
+					NoDataContainer ndc = (NoDataContainer) gc.getProperty("GC_NODATA");
+					CoverageUtilities.setNoDataProperty(null, Raster.getNoDataValue());
+					System.out.println(ndc.getAsSingleValue());
+					*/
+					
+					
+					/*
+					
+					
+					GridCoverage2D gc3 = CoverageManager.getCoverageFromData(fDistance, 144, 138);
+					CoverageManager.exportAsciiGrid(gc3, outputFolder+"/"+name+"_test3-"+values+".asc");
+					*/
+					
 					break;
 				case "functional" : 
+					/*
+					RCMDistanceUsingPenteInverseCalculation rcm = null;
+					Matrix mnt = JaiMatrixFactory.get().createWithAsciiGridOld("F:/Requete_SIG_LabPSE/vallee_de_la_seiche/data/raster/test/pente_buf7.asc", false);
+					if(friction != null){
+						rcm = new RCMDistanceUsingPenteInverseCalculation(m, friction, mnt, values, distance);
+						
+					}else{
+						rcm = new RCMDistanceUsingPenteInverseCalculation(m, frictionMatrix, mnt, values, distance);
+					}
+					*/
+					 
 					RCMDistanceCalculation rcm = null;
 					if(friction != null){
 						rcm = new RCMDistanceCalculation(m, friction, values, distance);
+						
 					}else{
 						rcm = new RCMDistanceCalculation(m, frictionMatrix, values, distance);
 					}
+					
 					rcm.addObserver(this);
 					mDistance = rcm.allRun();
 					break;
@@ -861,10 +935,14 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				pp.addObserver(this);
 				Matrix m3 = pp.allRun();
 				*/
-				if(outputAsc != null){
-					MatrixManager.exportAsciiGrid(mDistance, outputAsc);
-				}else{
-					MatrixManager.exportAsciiGrid(mDistance, outputFolder+"/"+name+"_dist-"+values+".asc");
+				if(mDistance != null){
+					if(outputAsc != null){
+						MatrixManager.exportAsciiGrid(mDistance, outputAsc);
+					}else{
+						MatrixManager.exportAsciiGrid(mDistance, outputFolder+"/"+name+"_dist-"+values+".asc");
+					}
+				}else if(cDistance != null){
+					//CoverageManager.exportAsciiGrid(cDistance, outputFolder+"/"+name+"_dist2-"+values+".asc");
 				}
 				
 				
@@ -933,7 +1011,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 
-	public boolean runClassification(boolean batch, Set<Matrix> matrix, Map<Domain<Double, Double>, Integer> domains, String asciiOutput, String outputAsc, boolean viewAsciiOutput) {
+	public boolean runClassification2(boolean batch, Set<Matrix> matrix, Map<Domain<Double, Double>, Integer> domains, String asciiOutput, String outputAsc, boolean viewAsciiOutput) {
 		this.batch = batch;
 		try{
 			for(Matrix m : matrix){
@@ -966,7 +1044,41 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean runOverlay(boolean batch, List<Matrix> matrix, String asciiOutput, String outputAsc, boolean viewAsciiOutput){
+	public boolean runClassification(boolean batch, Set<String> inAsciis, Map<Domain<Double, Double>, Integer> domains, String asciiOutput, String outputAsc, boolean viewAsciiOutput) {
+		this.batch = batch;
+		try{
+			for(String inAscii : inAsciis){
+				progress = 0;
+				File fia = new File(inAscii);
+				String name = fia.getName().replace(".asc", "");
+				
+				publish("classification : "+inAscii);
+				String outAscii = "";
+				if(outputAsc != null){
+					outAscii = outputAsc;
+				}else{
+					outAscii = asciiOutput+"/"+name+".asc";
+				}
+				Pixel2PixelAsciiGridCalculation ppagc = new ClassificationPixel2PixelAsciiGridCalculation(outAscii, inAscii, domains);
+				ppagc.run();
+			}	
+			
+			if(viewAsciiOutput){
+				if(outputAsc != null){
+					MatrixManager.visualize(outputAsc);
+				}else{
+					MatrixManager.visualize(asciiOutput);	
+				}
+			}
+			
+			return true;
+		}catch(Exception ex){
+			ex.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean runOverlay2(boolean batch, List<Matrix> matrix, String asciiOutput, String outputAsc, boolean viewAsciiOutput){
 		this.batch = batch;
 		try {
 			progress = 0;
@@ -1019,7 +1131,45 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		}
 	}
 	
-	public boolean runCombine(List<Matrix> matrix, List<String> names, String formula, String asciiOutput, String outputAsc, boolean viewAsciiOutput){
+	public boolean runOverlay(boolean batch, List<String> inAsciis, String asciiOutput, String outputAsc, boolean viewAsciiOutput){
+		this.batch = batch;
+		try {
+			progress = 0;
+			StringBuffer n = new StringBuffer();
+			for(String ia : inAsciis){
+				
+				File fia = new File(ia);
+				String na = fia.getName().replace(".asc", "");
+				n.append(na+"+");
+			}
+			//String name = "add_"+n.substring(0, n.length()-1);
+			String name = "overlay";
+			publish("overlay : "+n.toString());
+			//Matrix[] m = matrix.toArray(new Matrix[matrix.size()]);
+			String[] inAscii = inAsciis.toArray(new String[inAsciis.size()]);
+			String outAscii = "";
+			if(outputAsc != null){
+				outAscii = outputAsc;
+			}else{
+				outAscii = asciiOutput+"/"+name+".asc";
+			}
+			Pixel2PixelAsciiGridCalculation ppm = new OverlayPixel2PixelAsciiGridCalculation(outAscii, inAscii);
+			//ppm.addObserver(this);
+			ppm.run();
+			
+			if(viewAsciiOutput){
+				MatrixManager.visualize(outAscii);
+			}
+			
+			return true;
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean runCombine2(boolean batch, List<Matrix> matrix, List<String> names, String formula, String asciiOutput, String outputAsc, boolean viewAsciiOutput){
+		this.batch = batch;
 		try {
 			progress = 0;
 			String name = "combine";
@@ -1043,6 +1193,37 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				}else{
 					MatrixManager.visualize(asciiOutput);	
 				}
+			}
+			
+			return true;
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean runCombine(boolean batch, List<String> inAsciis, List<String> names, String formula, String asciiOutput, String outputAsc, boolean viewAsciiOutput){
+		this.batch = batch;
+		try {
+			progress = 0;
+			String name = "combine";
+			publish("combine");
+			String[] n = names.toArray(new String[names.size()]);
+			String[] inAscii = inAsciis.toArray(new String[inAsciis.size()]);
+			String outAscii = "";
+			if(outputAsc != null){
+				outAscii = outputAsc;
+			}else{
+				outAscii = asciiOutput+"/"+name+".asc";
+			}
+			
+			Raster.setNoDataValue(-1);
+			Pixel2PixelAsciiGridCalculation ppmc = CombinationExpressionFactory.createPixel2PixelAsciiGridCalculation(formula, n, outAscii, inAscii);
+			//ppmc.addObserver(this);
+			ppmc.run();
+			
+			if(viewAsciiOutput){
+				MatrixManager.visualize(outAscii);
 			}
 			
 			return true;

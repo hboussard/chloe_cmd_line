@@ -8,7 +8,7 @@ import javax.swing.JInternalFrame;
 import javax.swing.JScrollPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import fr.inra.sad.bagap.chloe.controller.LocalContext;
+import fr.inra.sad.bagap.chloe.controller.ChloeContext;
 import fr.inra.sad.bagap.chloe.view.treatment.TreatmentPanel;
 import fr.inra.sad.bagap.chloe.view.wizard.Wizard;
 import fr.inra.sad.bagap.chloe.view.wizard.WizardPanel;
@@ -67,7 +67,7 @@ public class ChooseTreatmentPanel extends WizardPanel {
 
 	public JDesktopPane getDesktop() {
 		if (desktop == null) {
-			desktop = new DesktopPaintPanel(LocalContext.get().getLogo());
+			desktop = new DesktopPaintPanel(ChloeContext.get().getLogo());
 		}
 		return desktop;
 	}

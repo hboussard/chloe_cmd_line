@@ -68,9 +68,10 @@ import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Matrix;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.MatrixManager;
 import fr.inra.sad.bagap.apiland.core.time.Instant;
 import fr.inra.sad.bagap.chloe.controller.Controller;
-import fr.inra.sad.bagap.chloe.controller.LocalContext;
+import fr.inra.sad.bagap.chloe.controller.ChloeContext;
 import fr.inra.sad.bagap.chloe.view.TreatmentTree;
 import fr.inra.sad.bagap.chloe.view.distance.DistanceFunctionDialog;
+//import fr.inra.sad.bagap.chloe.view.distance.DistanceFunctionDialog;
 import fr.inra.sad.bagap.chloe.view.wizard.Wizard;
 import fr.inra.sad.bagap.chloe.view.wizard.WizardPanel;
 
@@ -86,6 +87,10 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	protected static Set<Matrix> inputMatrix, /*fM,*/ filterMatrix, frictionMatrix, clusterFrictionMatrix, distanceFrictionMatrix;
 	
+	protected static Set<String> inputAsciiGrids, inputAsciiGridsAndValues, shapes;
+	
+	protected static List<String> inputAsciiGrids2, inputAsciiGrids3;
+	
 	protected static String inputAscii, inputCsv, mapCsv, inputShape, importationFile, distanceFunction;
 	
 	protected static int windowSize, gridSize;
@@ -97,8 +102,6 @@ public abstract class TreatmentPanel extends WizardPanel {
 	protected static Set<Integer> filters, unfilters, vDistances, vFilters;
 	
 	protected static Set<String> metrics;
-	
-	protected static Set<String> asciis, shapes;
 	
 	protected static Friction friction, clusterFriction, distanceFriction; 
 	
@@ -131,7 +134,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 	lFictif, lHabitatDistance, lMinimumTotalArea;
 
 	/** les boutons */
-	protected static JButton bAsciiInput, bAsciiFilter, bMatrixAdd, bMatrixRemove, bMatrixUp, bMatrixDown, bViewAsciiInput, bViewAsciiFilter, 
+	protected static JButton bMatrixCollectionInput, bAsciiGridCollectionInput, /*bAsciiGridCollectionAndValuesInput,*/ bAsciiFilter, bMatrixAdd, bMatrixRemove, bMatrixUp, bMatrixDown, 
+	bViewMatrixInput, bViewAsciiGridInput, bViewAsciiFilter, 
 	bCsvOutput, bsAdd, bsRem, bsgAdd, bsgRem, bmAll, bmAdd, bmRem, bmsmAll, bmsmAdd, bmsmRem, bOutputFolder,  bOutputFolder2, bOutputFolder3, 
 	bFriction, bFrictionCluster, bFrictionDistance, bPixel, bPoint, bRunPixel, 
 	bExportPixel, bExportPoint, bCsvInput, bSort, bHeader, bmVAll, bmVAdd, bmVRem, bViewAscii, bFuzion, bViewFuzionAscii, bRemoveFuzionAscii,
@@ -139,7 +143,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 	bDistanceFunction, bDistanceImport, bDistanceExport, bDistancePost;
 
 	/** les zones de texte */
-	protected static JTextArea taAsciiInput, taAsciiFilter, taOutputFolder, taCsvOutput, taCsvInput, taPixel, taPoint, taFriction, taFrictionCluster, taFrictionDistance, 
+	protected static JTextArea taAsciiGridInput, taAsciiGridAndValuesInput, taMatrixInput, taAsciiFilter, taOutputFolder, taCsvOutput, taCsvInput, taPixel, taPoint, taFriction, taFrictionCluster, taFrictionDistance, 
 	taShapeInput, taCorrespondance, 
 	taCombination, taFormula, taDistanceOrigin, taDistanceFinal, taDistancePic, taOutputFolder2, taOutputFolder3;
 
@@ -172,7 +176,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 	protected static JScrollPane pSize, pGSize, pLMetrics, pCMetrics, pLMSMetrics, pCMSMetrics, pCI, pCNI, pF, pNF, pDistances, pHabitats, pComplementaries, pFilters, pClassification,
 	pValues, pLVariables, pCVariables, pCellsize, pAttribute, pMatrix, pFuzion, pLMap;
 
-	protected static List<Matrix> inputMatrix2, inputMatrix3;
+	/*protected static List<Matrix> inputMatrix2, inputMatrix3;*/
 
 	protected static final Instant t = Instant.get(1, 1, 2000);
 	
@@ -196,11 +200,14 @@ public abstract class TreatmentPanel extends WizardPanel {
 	protected static void createComponents() {	
 		
 		inputMatrix = new HashSet<Matrix>();
-		inputMatrix2 = new ArrayList<Matrix>();
-		inputMatrix3 = new ArrayList<Matrix>();
+		inputAsciiGrids = new HashSet<String>();
+		inputAsciiGridsAndValues = new HashSet<String>();
+		//inputMatrix2 = new ArrayList<Matrix>();
+		//inputMatrix3 = new ArrayList<Matrix>();
+		inputAsciiGrids2 = new ArrayList<String>();
+		inputAsciiGrids3 = new ArrayList<String>();
 		pixels = new TreeSet<Pixel>();
 		//fM = new HashSet<Matrix>();
-		asciis = new HashSet<String>();
 		shapes = new HashSet<String>();
 		variables = new TreeSet<String>();
 		vmap = new TreeSet<String>();
@@ -224,13 +231,24 @@ public abstract class TreatmentPanel extends WizardPanel {
 		lAsciiInput = new JLabel("ascii grid input (file or folder) : ");
 		lAsciiInput.setFont(fl);
 		
-		taAsciiInput = new JTextArea();
-		taAsciiInput.setEditable(false);
+		taMatrixInput = new JTextArea();
+		taMatrixInput.setEditable(false);
 		
-		bAsciiInput = new JButton("Browse");
+		taAsciiGridInput = new JTextArea();
+		taAsciiGridInput.setEditable(false);
 		
-		bViewAsciiInput = new JButton("Visualize");
-		bViewAsciiInput.setEnabled(false);
+		taAsciiGridAndValuesInput = new JTextArea();
+		taAsciiGridAndValuesInput.setEditable(false);
+		
+		bMatrixCollectionInput = new JButton("Browse");
+		bAsciiGridCollectionInput = new JButton("Browse");
+		//bAsciiGridCollectionAndValuesInput = new JButton("Browse");
+		
+		bViewAsciiGridInput = new JButton("Visualize");
+		bViewAsciiGridInput.setEnabled(false);
+		
+		bViewMatrixInput = new JButton("Visualize");
+		bViewMatrixInput.setEnabled(false);
 		
 		lAsciiFilter = new JLabel("ascii grid filter : ");
 		lAsciiFilter.setFont(fl);
@@ -1286,7 +1304,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 	    bExportEnvelope = new JButton("Export envelope");
 	    bExportEnvelope.setEnabled(false);
 	    
-	    lCombination = new JLabel("formula : ");
+	    lCombination = new JLabel("formula = ");
 	    lCombination.setFont(fl);
 	    
 	    taCombination = new JTextArea();
@@ -1320,29 +1338,78 @@ public abstract class TreatmentPanel extends WizardPanel {
 			}
 		});
 		
-		bAsciiInput.addActionListener(new ActionListener(){
+		bMatrixCollectionInput.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					inputAscii = fc.getSelectedFile().toString();
-					inputMatrix.clear();
-					asciis.clear();
 					
-					getController().importAsciiGrid((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputMatrix, inputAscii);
+					/*
+					if(inputAscii.endsWith(".asc")){
+						inputMatrix.clear();
+						inputAsciiGrids.clear();
+						
+						getController().importMatrixCollection((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputMatrix, inputAscii);
+					}
+					*/
+					
+					inputMatrix.clear();
+					//inputAsciiGrids.clear();
+					getController().importMatrixCollection((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputMatrix, inputAscii);
 				}
 			}
 		});
 		
+		bAsciiGridCollectionInput.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
+				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
+					
+					inputAscii = fc.getSelectedFile().toString();
+					if(inputAscii.endsWith(".asc")){
+						inputAsciiGrids.clear();
+						//inputMatrix.clear();
+						
+						getController().importAsciiGridCollection((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputAsciiGrids, inputAscii);
+					}
+				}
+			}
+		});
+		
+		/*
+		bAsciiGridCollectionAndValuesInput.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
+				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
+					
+					inputAscii = fc.getSelectedFile().toString();
+					if(inputAscii.endsWith(".asc")){
+						inputAsciiGridsAndValues.clear();
+						
+						// TODO
+						//getController().importAsciiGridCollectionAndValues((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputAsciiGridsAndValues, inputAscii);
+					}
+				}
+			}
+		});
+		*/
+		
 		bAsciiFilter.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					inputAscii = fc.getSelectedFile().toString();
 					filterMatrix.clear();
@@ -1355,13 +1422,16 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bMatrixAdd.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					String inputAscii2 = fc.getSelectedFile().toString();
-					
-					getController().importAsciiGrid2((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputMatrix2, inputAscii2);
+					if(inputAscii2.endsWith(".asc")){
+						//getController().importAsciiGrid2((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputMatrix2, inputAscii2);
+						
+						getController().importAsciiGrid2((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputAsciiGrids2, inputAscii2);
+					}
 				}
 			}
 		});
@@ -1369,21 +1439,24 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bFuzion.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					String inputAscii3 = fc.getSelectedFile().toString();
-					
-					getController().importAsciiGrid3((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputMatrix3, inputAscii3);
+					if(inputAscii3.endsWith(".asc")){
+						//getController().importAsciiGrid3((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputMatrix3, inputAscii3);
+						
+						getController().importAsciiGrid3((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputAsciiGrids3, inputAscii3);
+					}
 				}
 			}
 		});
 		
-		bViewAsciiInput.addActionListener(new ActionListener(){
+		bViewAsciiGridInput.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				File file = new File(taAsciiInput.getText());
+				File file = new File(taAsciiGridInput.getText());
 				if(file.isDirectory()){
 					for(File f : file.listFiles()){
 						if(f.isFile() && f.getName().endsWith(".asc")){
@@ -1391,7 +1464,23 @@ public abstract class TreatmentPanel extends WizardPanel {
 						}
 					}
 				}else{
-					MatrixManager.visualize(taAsciiInput.getText());
+					MatrixManager.visualize(taAsciiGridInput.getText());
+				}
+			}
+		});
+		
+		bViewMatrixInput.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				File file = new File(taMatrixInput.getText());
+				if(file.isDirectory()){
+					for(File f : file.listFiles()){
+						if(f.isFile() && f.getName().endsWith(".asc")){
+							MatrixManager.visualize(f.getAbsolutePath());
+						}
+					}
+				}else{
+					MatrixManager.visualize(taMatrixInput.getText());
 				}
 			}
 		});
@@ -1469,9 +1558,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bFriction.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					String file = fc.getSelectedFile().toString();
 					taFriction.setText(file);
@@ -1490,9 +1579,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bFrictionCluster.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					String file = fc.getSelectedFile().toString();
 					taFrictionCluster.setText(file);
@@ -1512,9 +1601,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bFrictionDistance.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					String file = fc.getSelectedFile().toString();
 					taFrictionDistance.setText(file);
@@ -1605,9 +1694,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bPixel.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					taPixel.setText(fc.getSelectedFile().toString());
 					
@@ -1648,9 +1737,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bPoint.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					taPoint.setText(fc.getSelectedFile().toString());
 					
@@ -2068,9 +2157,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bExportPixel.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showSaveDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					String file = fc.getSelectedFile().toString();
 					if(!file.endsWith(".txt") && !file.endsWith(".csv")){
@@ -2085,9 +2174,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bExportPoint.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showSaveDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					String file = fc.getSelectedFile().toString();
 					if(!file.endsWith(".txt") && !file.endsWith(".csv")){
@@ -2185,7 +2274,8 @@ public abstract class TreatmentPanel extends WizardPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				((DefaultTableModel) tFuzion.getModel()).removeRow(tFuzion.getModel().getRowCount()-1);
-				inputMatrix3.remove(inputMatrix3.size()-1);
+				//inputMatrix3.remove(inputMatrix3.size()-1);
+				inputAsciiGrids3.remove(inputAsciiGrids3.size()-1);
 				index3--;
 			}
 		});
@@ -2195,10 +2285,12 @@ public abstract class TreatmentPanel extends WizardPanel {
 			public void actionPerformed(ActionEvent e) {
 				String ascii = (String) tMatrix.getModel().getValueAt(tMatrix.getSelectedRows()[0], 0);
 				((DefaultTableModel) tMatrix.getModel()).removeRow(tMatrix.getSelectedRows()[0]);
-				Iterator<Matrix> ite = inputMatrix2.iterator();
+				//Iterator<String> ite = inputMatrix2.iterator();
+				Iterator<String> ite = inputAsciiGrids2.iterator();
 				while(ite.hasNext()){
-					Matrix m = ite.next();
-					if(m.getFile().equalsIgnoreCase(ascii)){
+					//Matrix m = ite.next();
+					//if(m.getFile().equalsIgnoreCase(ascii)){
+					if(ite.next().equalsIgnoreCase(ascii)){
 						ite.remove();
 						break;
 					}
@@ -2218,9 +2310,13 @@ public abstract class TreatmentPanel extends WizardPanel {
 					((DefaultTableModel) tMatrix.getModel()).insertRow(row - 1, v);
 					tMatrix.getSelectionModel().setSelectionInterval(row - 1, row - 1);
 					
-					Matrix m = inputMatrix2.get(row - 1);
-					inputMatrix2.set(row-1, inputMatrix2.get(row));
-					inputMatrix2.set(row, m);
+					//Matrix m = inputMatrix2.get(row - 1);
+					//inputMatrix2.set(row-1, inputMatrix2.get(row));
+					//inputMatrix2.set(row, m);
+					
+					String m = inputAsciiGrids2.get(row - 1);
+					inputAsciiGrids2.set(row-1, inputAsciiGrids2.get(row));
+					inputAsciiGrids2.set(row, m);
 				}
 			}
 		});
@@ -2237,9 +2333,13 @@ public abstract class TreatmentPanel extends WizardPanel {
 					((DefaultTableModel) tMatrix.getModel()).insertRow(row + 1, v);
 					tMatrix.getSelectionModel().setSelectionInterval(row + 1, row + 1);
 					
-					Matrix m = inputMatrix2.get(row);
-					inputMatrix2.set(row, inputMatrix2.get(row+1));
-					inputMatrix2.set(row+1, m);
+					//Matrix m = inputMatrix2.get(row);
+					//inputMatrix2.set(row, inputMatrix2.get(row+1));
+					//inputMatrix2.set(row+1, m);
+					
+					String m = inputAsciiGrids2.get(row);
+					inputAsciiGrids2.set(row, inputAsciiGrids2.get(row+1));
+					inputAsciiGrids2.set(row+1, m);
 				}
 			}
 		});
@@ -2354,10 +2454,10 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bOutputFolder.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				if(fc.showSaveDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					taOutputFolder.setText(fc.getSelectedFile().toString());
 				}
@@ -2367,10 +2467,10 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bOutputFolder2.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				if(fc.showSaveDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					taOutputFolder2.setText(fc.getSelectedFile().toString());
 				}
@@ -2380,10 +2480,10 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bOutputFolder3.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				if(fc.showSaveDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					taOutputFolder3.setText(fc.getSelectedFile().toString());
 				}
@@ -2393,7 +2493,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bCsvOutput.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showSaveDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
 					
 					String name = fc.getSelectedFile().toString();
@@ -2401,7 +2501,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 						name += ".csv";
 					}
 			
-					LocalContext.get().setRepData(new File(name).getAbsolutePath());
+					ChloeContext.get().setRepData(new File(name).getAbsolutePath());
 					
 					taCsvOutput.setText(name);
 				}
@@ -2422,10 +2522,10 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bCsvInput.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					inputCsv = fc.getSelectedFile().toString();
 					variables.clear();
@@ -2438,9 +2538,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bCsvMap.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					mapCsv = fc.getSelectedFile().toString();
 					vmap.clear();
@@ -2560,7 +2660,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bHeader.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
 					initWithAsciiGrid(fc.getSelectedFile().toString());
 				}
@@ -2570,10 +2670,10 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bShapeInput.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					inputShape = fc.getSelectedFile().toString();
 					shapes.clear();
 					getController().importShapefile((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputShape, shapes);
@@ -2584,9 +2684,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bCorrespondance.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
-					LocalContext.get().setRepData(fc.getSelectedFile().toString());
+					ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 					
 					taCorrespondance.setText(fc.getSelectedFile().toString());
 				}
@@ -2680,7 +2780,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bImportEnvelope.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
 					//System.out.println(fc.getSelectedFile().toString());
 					String propertiesFile = fc.getSelectedFile().toString();
@@ -2716,7 +2816,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bExportEnvelope.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
 					//System.out.println(fc.getSelectedFile().toString());
 					String propertiesFile = fc.getSelectedFile().toString();
@@ -2746,7 +2846,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bDistanceExport.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
 					//System.out.println(fc.getSelectedFile().toString());
 					String functionFile = fc.getSelectedFile().toString();
@@ -2773,7 +2873,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		bDistanceImport.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+				JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 				if(fc.showOpenDialog(TreatmentPanel.wizard.getCurrent()) == JFileChooser.APPROVE_OPTION){
 					//System.out.println(fc.getSelectedFile().toString());
 					String functionFile = fc.getSelectedFile().toString();
@@ -3114,11 +3214,44 @@ public abstract class TreatmentPanel extends WizardPanel {
 		displayMetrics(cbType.getSelectedItem().toString());
 		displayDeltaInMeters();
 		displayValues();
-		taAsciiInput.setText(inputAscii);
+		taMatrixInput.setText(inputAscii);
 		enabledIhm();
 		
 		//enabledImportation();
 	}
+	
+	public void displayIhm(String ascii){
+		
+		taAsciiGridInput.setText(ascii);
+		
+		bViewAsciiGridInput.setEnabled(true);
+		taOutputFolder.setEnabled(true);
+		bOutputFolder.setEnabled(true);
+		viewAsciiOutput.setEnabled(true);
+		bNewClassification.setEnabled(true);
+		bRemoveClassification.setEnabled(true);
+		tClassification.setEnabled(true);
+		
+		//enabledIhm();
+		//enabledImportation();
+	}
+	
+	/*
+	public void displayIhmAndValues(String ascii){
+		
+		taAsciiGridAndValuesInput.setText(ascii);
+		
+		bViewAsciiGridInput.setEnabled(true);
+		taOutputFolder.setEnabled(true);
+		bOutputFolder.setEnabled(true);
+		viewAsciiOutput.setEnabled(true);
+		bNewClassification.setEnabled(true);
+		bRemoveClassification.setEnabled(true);
+		tClassification.setEnabled(true);
+		
+		//enabledIhm();
+		//enabledImportation();
+	}*/
 	
 	public void displayIhm2(String ascii){
 		
@@ -3284,7 +3417,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 	}
 	
 	public void enabledIhm() {
-		bViewAsciiInput.setEnabled(true);
+		bViewMatrixInput.setEnabled(true);
 		cbType.setEnabled(true);
 		cbShape.setEnabled(true);
 		spSize.setEnabled(true);
@@ -3326,9 +3459,9 @@ public abstract class TreatmentPanel extends WizardPanel {
 		tCellsize.setEnabled(true);
 		tDistances.setEnabled(true);
 		tFilters.setEnabled(true);
-		bNewClassification.setEnabled(true);
-		bRemoveClassification.setEnabled(true);
-		tClassification.setEnabled(true);
+		//bNewClassification.setEnabled(true);
+		//bRemoveClassification.setEnabled(true);
+		//tClassification.setEnabled(true);
 		
 		rbRook.setEnabled(true);
 		rbQueen.setEnabled(true);
@@ -3411,15 +3544,37 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	public abstract void doImport(Properties properties);
 	
-	public void importInputAscii(Properties properties){
-		taAsciiInput.setText("");
+	public void importInputMatrix(Properties properties){
+		taMatrixInput.setText("");
 		if(properties.containsKey("input_ascii")){
 			String prop = properties.getProperty("input_ascii");
 			inputAscii = prop;
 			inputMatrix.clear();
-			getController().importAsciiGrid(this, inputMatrix, prop);
+			getController().importMatrixCollection(this, inputMatrix, prop);
 		}
 	}
+	
+	public void importInputAsciiGrid(Properties properties){
+		taAsciiGridInput.setText("");
+		if(properties.containsKey("input_ascii")){
+			String prop = properties.getProperty("input_ascii");
+			inputAscii = prop;
+			inputAsciiGrids.clear();
+			getController().importAsciiGridCollection(this, inputAsciiGrids, prop);
+		}
+	}
+	
+	/*
+	public void importInputAsciiGridAndValues(Properties properties){
+		taAsciiGridAndValuesInput.setText("");
+		if(properties.containsKey("input_ascii")){
+			String prop = properties.getProperty("input_ascii");
+			inputAscii = prop;
+			inputAsciiGridsAndValues.clear();
+			//TODO
+			//getController().importAsciiGridCollectionAndValues(this, inputAsciiGridsAndValues, prop);
+		}
+	}*/
 	
 	public void importInputCsv(Properties properties){
 		taCsvInput.setText("");
@@ -3783,6 +3938,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		}
 	}
 	
+	/*
 	public void importOverlayingMatrix(Properties properties){
 		if(properties.containsKey("overlaying_matrix")){
 			String prop = properties.getProperty("overlaying_matrix");
@@ -3790,6 +3946,18 @@ public abstract class TreatmentPanel extends WizardPanel {
 			String[] ms = prop.split(";");
 			for(String m : ms){
 				getController().importAsciiGrid2((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputMatrix2, m);
+			}
+		}
+	}
+	*/
+	
+	public void importOverlayingMatrix(Properties properties){
+		if(properties.containsKey("overlaying_matrix")){
+			String prop = properties.getProperty("overlaying_matrix");
+			prop = prop.replace("{", "").replace("}", "").replace(" ", "");
+			String[] ms = prop.split(";");
+			for(String m : ms){
+				getController().importAsciiGrid2((TreatmentPanel) TreatmentPanel.wizard.getCurrent(), inputAsciiGrids2, m);
 			}
 		}
 	}
@@ -3997,6 +4165,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		}
 	}
 	
+	/*
 	public void importFactors(Properties properties){
 		inputMatrix3.clear();
 		for(; 0<tFuzion.getRowCount();){
@@ -4010,6 +4179,26 @@ public abstract class TreatmentPanel extends WizardPanel {
 				d = d.replace("(", "").replace(")", "");
 				String[] dd = d.split(",");
 				getController().importAsciiGrid3(this, inputMatrix3, dd[0]);
+				((DefaultTableModel) tFuzion.getModel()).setValueAt(dd[1], r, 1);
+				r++;
+			}
+		}
+	}
+	*/
+	
+	public void importFactors(Properties properties){
+		inputAsciiGrids3.clear();
+		for(; 0<tFuzion.getRowCount();){
+			((DefaultTableModel) tFuzion.getModel()).removeRow(0);
+		}
+		if(properties.containsKey("factors")){
+			String prop = properties.getProperty("factors").replace("{", "").replace("}", "");
+			String[] ds = prop.split(";");
+			int r = 0;
+			for(String d : ds){
+				d = d.replace("(", "").replace(")", "");
+				String[] dd = d.split(",");
+				getController().importAsciiGrid3(this, inputAsciiGrids3, dd[0]);
 				((DefaultTableModel) tFuzion.getModel()).setValueAt(dd[1], r, 1);
 				r++;
 			}
@@ -4107,8 +4296,12 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	public abstract void doExport(Properties properties);
 
-	public void exportInputAscii(Properties properties){
-		properties.setProperty("input_ascii", taAsciiInput.getText());
+	public void exportInputMatrix(Properties properties){
+		properties.setProperty("input_ascii", taMatrixInput.getText());
+	}
+	
+	public void exportInputAsciiGrid(Properties properties){
+		properties.setProperty("input_ascii", taAsciiGridInput.getText());
 	}
 	
 	public void exportInputCsv(Properties properties){

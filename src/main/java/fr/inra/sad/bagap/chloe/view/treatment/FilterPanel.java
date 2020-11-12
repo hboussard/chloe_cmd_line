@@ -45,7 +45,7 @@ public class FilterPanel extends TreatmentPanel {
 		c.anchor = GridBagConstraints.LINE_START;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		add(taAsciiInput, c);
+		add(taMatrixInput, c);
 		
 		c.gridx = 2;
 		c.gridy = 1;
@@ -53,11 +53,11 @@ public class FilterPanel extends TreatmentPanel {
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		c.weighty = 0;
-		add(bAsciiInput, c);
+		add(bMatrixCollectionInput, c);
 
 		c.gridx = 3;
 		c.gridy = 1;
-		add(bViewAsciiInput, c);
+		add(bViewMatrixInput, c);
 		
 		c.gridx = 0;
 		c.gridy = 2;
@@ -143,7 +143,7 @@ public class FilterPanel extends TreatmentPanel {
 	
 	@Override
 	public void doImport(Properties properties) {
-		importInputAscii(properties);
+		importInputMatrix(properties);
 		importFilterAscii(properties);
 		importFilterValues(properties);
 		importOutputFolder(properties);
@@ -152,7 +152,7 @@ public class FilterPanel extends TreatmentPanel {
 	
 	@Override
 	public void doExport(Properties properties){
-		exportInputAscii(properties);
+		exportInputMatrix(properties);
 		exportFilterAscii(properties);
 		exportFilterValues(properties);
 		exportOutputFolder(properties);

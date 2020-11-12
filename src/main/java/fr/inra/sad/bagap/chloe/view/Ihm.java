@@ -14,15 +14,15 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import fr.inra.sad.bagap.chloe.controller.Controller;
-import fr.inra.sad.bagap.chloe.controller.LocalContext;
+import fr.inra.sad.bagap.chloe.controller.ChloeContext;
 import fr.inra.sad.bagap.chloe.view.treatment.TreatmentPanel;
 import fr.inra.sad.bagap.chloe.view.wizard.Wizard;
 
 public class Ihm {
 
-	private String version = "4.0";
+	private String version = "4.1";
 	
-	private String beta = "beta35";
+	private String beta = "beta3";
 	
 	private Controller controller;
 	
@@ -77,7 +77,7 @@ public class Ihm {
 				}
 			});
 			
-			frame.setIconImage(Toolkit.getDefaultToolkit().getImage(LocalContext.get().getIcon()));
+			frame.setIconImage(Toolkit.getDefaultToolkit().getImage(ChloeContext.get().getIcon()));
 			
 			progressBar = new TreatmentProgressBar(frame);
 			
@@ -123,9 +123,9 @@ public class Ihm {
 	}
 
 	public void importTreatment() {
-		JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+		JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 		if(fc.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION){
-			LocalContext.get().setRepData(fc.getSelectedFile().toString());
+			ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 			
 			String file = fc.getSelectedFile().toString();
 			
@@ -157,9 +157,9 @@ public class Ihm {
 	}
 
 	public void exportTreatment() {
-		JFileChooser fc = new JFileChooser(LocalContext.get().getRepData());
+		JFileChooser fc = new JFileChooser(ChloeContext.get().getRepData());
 		if(fc.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
-			LocalContext.get().setRepData(fc.getSelectedFile().toString());
+			ChloeContext.get().setRepData(fc.getSelectedFile().toString());
 			
 			String file = fc.getSelectedFile().toString();
 			

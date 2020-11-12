@@ -47,7 +47,7 @@ public class GridWindowPanel extends TreatmentPanel {
 		c.anchor = GridBagConstraints.LINE_START;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
-		add(taAsciiInput, c);
+		add(taMatrixInput, c);
 		
 		c.gridx = 6;
 		c.gridy = 1;
@@ -56,11 +56,11 @@ public class GridWindowPanel extends TreatmentPanel {
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		c.weighty = 0;
-		add(bAsciiInput, c);
+		add(bMatrixCollectionInput, c);
 		
 		c.gridx = 7;
 		c.gridy = 1;
-		add(bViewAsciiInput, c);
+		add(bViewMatrixInput, c);
 	
 		c.gridx = 0;
 		c.gridy = 5;
@@ -220,7 +220,7 @@ public class GridWindowPanel extends TreatmentPanel {
 	
 	@Override
 	public void doImport(Properties properties) {
-		importInputAscii(properties);
+		importInputMatrix(properties);
 		importGridSizes(properties);
 		importMaximumNoValueRate(properties);
 		importMetrics(properties);
@@ -232,7 +232,7 @@ public class GridWindowPanel extends TreatmentPanel {
 	
 	@Override
 	public void doExport(Properties properties){
-		exportInputAscii(properties);
+		exportInputMatrix(properties);
 		exportGridSizes(properties);
 		exportMaximumNoValueRate(properties);
 		exportMetrics(properties);

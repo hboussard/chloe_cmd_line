@@ -12,7 +12,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeSelectionModel;
 
-import fr.inra.sad.bagap.chloe.controller.LocalContext;
+import fr.inra.sad.bagap.chloe.controller.ChloeContext;
 import fr.inra.sad.bagap.chloe.view.treatment.*;
 import fr.inra.sad.bagap.chloe.view.wizard.Wizard;
 
@@ -49,10 +49,10 @@ public class TreatmentTree extends JTree{
 				DefaultMutableTreeNode node = (DefaultMutableTreeNode)value;
 				Icon icone = null;
 				if(node.getUserObject() instanceof TreatmentPanel){
-	  				icone = new ImageIcon(LocalContext.get().getRepImages() + "treatment.png");
+	  				icone = new ImageIcon(ChloeContext.get().getRepImages() + "treatment.png");
 	  				//icone = new ImageIcon(LocalContext.get().getRepImages() + "chloe_icon.jpg");
 	  			}else{
-	  				icone = new ImageIcon(LocalContext.get().getRepImages() + "group.png");
+	  				icone = new ImageIcon(ChloeContext.get().getRepImages() + "group.png");
 	  			}
 				
 				setBackgroundNonSelectionColor(new Color(r, g , b));

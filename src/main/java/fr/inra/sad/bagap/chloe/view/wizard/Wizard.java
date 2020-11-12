@@ -24,7 +24,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import fr.inra.sad.bagap.chloe.controller.Controller;
-import fr.inra.sad.bagap.chloe.controller.LocalContext;
+import fr.inra.sad.bagap.chloe.controller.ChloeContext;
 import fr.inra.sad.bagap.chloe.view.Ihm;
 import fr.inra.sad.bagap.chloe.view.TreatmentTree;
 import fr.inra.sad.bagap.chloe.view.treatment.TreatmentPanel;
@@ -264,7 +264,7 @@ public class Wizard extends JPanel implements ActionListener, MouseListener {
     	if(Desktop.isDesktopSupported()){
 			if(Desktop.getDesktop().isSupported(java.awt.Desktop.Action.OPEN)){
 				try {
-					java.awt.Desktop.getDesktop().open(new File(LocalContext.get().getDocumentation()));
+					java.awt.Desktop.getDesktop().open(new File(ChloeContext.get().getDocumentation()));
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}

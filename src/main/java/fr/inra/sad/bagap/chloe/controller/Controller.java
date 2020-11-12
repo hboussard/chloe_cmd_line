@@ -51,7 +51,7 @@ public class Controller {
 	
 	public void close(){
 		try{
-			LocalContext.save();
+			ChloeContext.save();
 		}
 		catch(IOException ex){
 			ex.printStackTrace();
@@ -175,7 +175,7 @@ public class Controller {
 		swingworker.execute();
 	}
 	
-	public void importAsciiGrid(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
+	public void importMatrixCollection(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
 		
 		File file = new File(ascii);
 		//matrix.clear();
@@ -207,6 +207,27 @@ public class Controller {
 		}
 	}
 	
+	public void importAsciiGridCollection(final TreatmentPanel panel, final Collection<String> inputAsciiGrids, final String ascii) {
+		File file = new File(ascii);
+		if(file.isFile()){
+			inputAsciiGrids.add(ascii);
+			panel.displayIhm(ascii);
+		}else{
+			throw new IllegalArgumentException();
+		}
+	}
+	
+	public void importAsciiGridAndValuesCollection(final TreatmentPanel panel, final Collection<String> inputAsciiGrids, final String ascii) {
+		File file = new File(ascii);
+		if(file.isFile()){
+			inputAsciiGrids.add(ascii);
+			panel.displayIhm(ascii);
+		}else{
+			throw new IllegalArgumentException();
+		}
+	}
+	
+	/*
 	public void importAsciiGrid2(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
 		File file = new File(ascii);
 		if(file.isFile()){
@@ -227,8 +248,20 @@ public class Controller {
 		}else{
 			throw new IllegalArgumentException();
 		}
+	}*/
+	
+
+	public void importAsciiGrid2(final TreatmentPanel panel, final List<String> inputAscii, final String ascii) {
+		File file = new File(ascii);
+		if(file.isFile()){
+			inputAscii.add(ascii);
+			panel.displayIhm2(ascii);
+		}else{
+			throw new IllegalArgumentException();
+		}
 	}
 	
+	/*
 	public void importAsciiGrid3(final TreatmentPanel panel, final Collection<Matrix> matrix, final String ascii) {
 		File file = new File(ascii);
 		if(file.isFile()){
@@ -246,6 +279,16 @@ public class Controller {
 					ihm.publish("not possible to import this file : "+ascii);
 				}
 			}
+		}else{
+			throw new IllegalArgumentException();
+		}
+	}*/
+	
+	public void importAsciiGrid3(final TreatmentPanel panel, final List<String> inputAscii, final String ascii) {
+		File file = new File(ascii);
+		if(file.isFile()){
+			inputAscii.add(ascii);
+			panel.displayIhm3(ascii);
 		}else{
 			throw new IllegalArgumentException();
 		}
@@ -291,7 +334,6 @@ public class Controller {
 						CsvReader cr = new CsvReader(inputCsv+"/"+csv);
 						cr.setDelimiter(';');
 						cr.readHeaders();
-						
 						for(String h : cr.getHeaders()){
 							if(!h.equalsIgnoreCase("X") && !h.equalsIgnoreCase("Y")){
 								variables.add(h);
@@ -301,7 +343,8 @@ public class Controller {
 					}
 				}
 				panel.displayVariables();
-				panel.enabledIhm();
+				//panel.enabledIhm();
+				panel.enabledIhmforCsv();
 			}else{
 				CsvReader cr = new CsvReader(inputCsv);
 				cr.setDelimiter(';');
@@ -527,12 +570,12 @@ public class Controller {
 		swingworker.execute();
 	}
 	
-	public void runOverlay(final List<Matrix> matrix, final String asciiOutput, final boolean viewAsciiOutput) {
+	public void runOverlay2(final List<Matrix> matrix, final String asciiOutput, final boolean viewAsciiOutput) {
 		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runOverlay(false, matrix, asciiOutput, null, viewAsciiOutput);
+				return model.runOverlay2(false, matrix, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -543,12 +586,44 @@ public class Controller {
 		swingworker.execute();
 	}
 	
-	public void runCombine(final List<Matrix> matrix, final List<String> names, String formula, final String asciiOutput, final boolean viewAsciiOutput) {
+	public void runOverlay(final List<String> matrixFile, final String asciiOutput, final boolean viewAsciiOutput) {
 		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runCombine(matrix, names, formula, asciiOutput, null, viewAsciiOutput);
+				return model.runOverlay(false, matrixFile, asciiOutput, null, viewAsciiOutput);
+			}
+			@Override
+			protected void done() {
+				super.done();
+				ihm.reset();
+			}
+		};
+		swingworker.execute();
+	}
+	
+	public void runCombine2(final List<Matrix> matrix, final List<String> names, String formula, final String asciiOutput, final boolean viewAsciiOutput) {
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {
+				ihm.start();
+				return model.runCombine2(false, matrix, names, formula, asciiOutput, null, viewAsciiOutput);
+			}
+			@Override
+			protected void done() {
+				super.done();
+				ihm.reset();
+			}
+		};
+		swingworker.execute();
+	}
+	
+	public void runCombine(final List<String> matrixFile, final List<String> names, String formula, final String asciiOutput, final boolean viewAsciiOutput) {
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {
+				ihm.start();
+				return model.runCombine(false, matrixFile, names, formula, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {
@@ -559,13 +634,30 @@ public class Controller {
 		swingworker.execute();
 	}
 
-	public void runClassification(final TreatmentPanel panel, final Set<Matrix> inputMatrix, final Map<Domain<Double, Double>, Integer> domains, final String asciiOutput, final boolean viewAsciiOutput) {
+	public void runClassification2(final TreatmentPanel panel, final Set<Matrix> inputMatrix, final Map<Domain<Double, Double>, Integer> domains, final String asciiOutput, final boolean viewAsciiOutput) {
 		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
 				//panel.cleanDomains();
-				return model.runClassification(false, inputMatrix, domains, asciiOutput, null, viewAsciiOutput);
+				return model.runClassification2(false, inputMatrix, domains, asciiOutput, null, viewAsciiOutput);
+			}
+			@Override
+			protected void done() {
+				super.done();
+				ihm.reset();
+			}
+		};
+		swingworker.execute();
+	}
+	
+	public void runClassification(final TreatmentPanel panel, final Set<String> matrixFile, final Map<Domain<Double, Double>, Integer> domains, final String asciiOutput, final boolean viewAsciiOutput) {
+		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
+			@Override
+			protected Boolean doInBackground() throws Exception {
+				ihm.start();
+				//panel.cleanDomains();
+				return model.runClassification(false, matrixFile, domains, asciiOutput, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {

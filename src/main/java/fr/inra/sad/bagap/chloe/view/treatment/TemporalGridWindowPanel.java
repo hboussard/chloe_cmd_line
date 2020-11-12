@@ -236,7 +236,7 @@ public class TemporalGridWindowPanel extends TreatmentPanel {
 	
 	@Override
 	public void doImport(Properties properties) {
-		importInputAscii(properties);
+		importInputMatrix(properties);
 		importProcessType(properties);
 		importGridSizes(properties);
 		importMetrics(properties);
@@ -249,7 +249,7 @@ public class TemporalGridWindowPanel extends TreatmentPanel {
 	
 	@Override
 	public void doExport(Properties properties){
-		exportInputAscii(properties);
+		exportInputMatrix(properties);
 		exportProcessType(properties);
 		exportGridSizes(properties);
 		exportMetrics(properties);

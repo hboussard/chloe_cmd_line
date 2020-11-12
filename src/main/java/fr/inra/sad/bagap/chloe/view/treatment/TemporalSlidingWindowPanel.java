@@ -305,7 +305,7 @@ public class TemporalSlidingWindowPanel extends TreatmentPanel {
 	
 	@Override
 	public void doImport(Properties properties) {
-		importInputAscii(properties);
+		importInputMatrix(properties);
 		importProcessType(properties);
 		importShape(properties);
 		importWindowSizes(properties);
@@ -322,7 +322,7 @@ public class TemporalSlidingWindowPanel extends TreatmentPanel {
 	
 	@Override
 	public void doExport(Properties properties){
-		exportInputAscii(properties);
+		exportInputMatrix(properties);
 		exportProcessType(properties);
 		exportShape(properties);
 		exportWindowSize(properties);

@@ -53,7 +53,7 @@ public class ClassificationPanel extends TreatmentPanel {
 		c.anchor = GridBagConstraints.LINE_START;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		//c.weightx = 1;
-		add(taAsciiInput, c);
+		add(taAsciiGridInput, c);
 		
 		c.gridx = 4;
 		c.gridy = 1;
@@ -62,11 +62,11 @@ public class ClassificationPanel extends TreatmentPanel {
 		c.fill = GridBagConstraints.NONE;
 		c.weightx = 0;
 		c.weighty = 0;
-		add(bAsciiInput, c);
+		add(bAsciiGridCollectionInput, c);
 
 		c.gridx = 5;
 		c.gridy = 1;
-		add(bViewAsciiInput, c);
+		add(bViewAsciiGridInput, c);
 		
 		c.gridx = 0;
 		c.gridy = 3;
@@ -239,7 +239,7 @@ public class ClassificationPanel extends TreatmentPanel {
 
 	@Override
 	public void doImport(Properties properties) {
-		importInputAscii(properties);
+		importInputAsciiGrid(properties);
 		importDomains(properties);
 		importOutputFolder(properties);
 		importVisualizeAscii(properties);
@@ -247,7 +247,7 @@ public class ClassificationPanel extends TreatmentPanel {
 	
 	@Override
 	public void doExport(Properties properties){
-		exportInputAscii(properties);
+		exportInputAsciiGrid(properties);
 		exportDomains(properties);
 		exportOutputFolder(properties);
 		exportVisualizeAscii(properties);
@@ -255,7 +255,8 @@ public class ClassificationPanel extends TreatmentPanel {
 
 	@Override
 	public void run() {
-		getController().runClassification(this, inputMatrix, domains, taOutputFolder.getText(), viewAsciiOutput.isSelected());
+		//getController().runClassification(this, inputMatrix, domains, taOutputFolder.getText(), viewAsciiOutput.isSelected());
+		getController().runClassification(this, inputAsciiGrids, domains, taOutputFolder.getText(), viewAsciiOutput.isSelected());
 	}
 
 }

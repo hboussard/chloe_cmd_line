@@ -69,7 +69,7 @@ public class CombinePanel extends TreatmentPanel {
 		c.gridx = 0;
 		c.gridy = 6;
 		c.fill = GridBagConstraints.NONE;
-		c.anchor = GridBagConstraints.FIRST_LINE_END;
+		c.anchor = GridBagConstraints.LINE_END;
 		add(lCombination, c);
 		
 		c.gridx = 1;
@@ -150,7 +150,8 @@ public class CombinePanel extends TreatmentPanel {
 	
 	@Override
 	public void run() {
-		getController().runCombine(inputMatrix3, names, formula, taOutputFolder3.getText(), viewAsciiOutput3.isSelected());
+		//getController().runCombine2(inputMatrix3, names, formula, taOutputFolder3.getText(), viewAsciiOutput3.isSelected());
+		getController().runCombine(inputAsciiGrids3, names, formula, taOutputFolder3.getText(), viewAsciiOutput3.isSelected());
 	}
 
 }

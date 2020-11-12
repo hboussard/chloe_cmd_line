@@ -45,7 +45,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-public class LocalContext implements Serializable{
+public class ChloeContext implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 	
@@ -65,24 +65,24 @@ public class LocalContext implements Serializable{
 	
 	private String repUserData = "";
 
-	private static LocalContext instance = new LocalContext();
+	private static ChloeContext instance = new ChloeContext();
 	
-	private LocalContext(){
+	private ChloeContext(){
 		repUserData = repData;
 	}
 
-	public static LocalContext get(){
+	public static ChloeContext get(){
 		return instance;
 	}
 	
-	public static void setInstance(LocalContext ls){
+	public static void setInstance(ChloeContext ls){
 		instance = ls;
 	}
 
 	public static void save() throws IOException{
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(repSystem+"local.ctx"));
 		try{
-			out.writeObject(LocalContext.get());
+			out.writeObject(ChloeContext.get());
 		}
 		finally{
 			out.flush();
@@ -94,7 +94,7 @@ public class LocalContext implements Serializable{
 		ObjectInputStream in = null;
 		try {
 			in = new ObjectInputStream(new FileInputStream(repSystem+"local.ctx"));
-			setInstance((LocalContext)in.readObject());
+			setInstance((ChloeContext)in.readObject());
 			in.close();
 		} catch (IOException e) {
 			// do nothing

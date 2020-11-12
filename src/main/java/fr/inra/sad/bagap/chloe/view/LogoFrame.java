@@ -6,7 +6,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
 
-import fr.inra.sad.bagap.chloe.controller.LocalContext;
+import fr.inra.sad.bagap.chloe.controller.ChloeContext;
 
 public class LogoFrame extends Frame {
 	
@@ -24,8 +24,8 @@ public class LogoFrame extends Frame {
         setFocusable(false); 
         setEnabled(false); 
         setTitle("Chloe-4.0");
-		setIconImage(Toolkit.getDefaultToolkit().getImage(LocalContext.get().getIcon()));
-        img = this.getToolkit().createImage(LocalContext.get().getLogo());
+		setIconImage(Toolkit.getDefaultToolkit().getImage(ChloeContext.get().getIcon()));
+        img = this.getToolkit().createImage(ChloeContext.get().getLogo());
         setLocationRelativeTo(null);
 		setVisible(true);
     } 

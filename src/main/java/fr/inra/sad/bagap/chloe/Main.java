@@ -26,7 +26,7 @@ import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Friction;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.matrix.Matrix;
 import fr.inra.sad.bagap.apiland.domain.Domain;
 import fr.inra.sad.bagap.chloe.controller.Controller;
-import fr.inra.sad.bagap.chloe.controller.LocalContext;
+import fr.inra.sad.bagap.chloe.controller.ChloeContext;
 import fr.inra.sad.bagap.chloe.model.Model;
 import fr.inra.sad.bagap.chloe.view.Ihm;
 import fr.inra.sad.bagap.chloe.view.LogoFrame;
@@ -51,10 +51,10 @@ public class Main {
 		LogoFrame launch = null;
 		try{
 			launch = new LogoFrame();
-			System.out.println("Chloe - INRA - SAD - BAGAP");
+			System.out.println("Chloe - INRAE - ACT - BAGAP");
 			
 			Locale.setDefault(Locale.US);
-			LocalContext.load(); // chargement du context local
+			ChloeContext.load(); // chargement du context local
 			
 			Ihm ihm = new Ihm(new ServerSocket(new Integer(socket)));
 			Model model = new Model();
@@ -62,7 +62,7 @@ public class Main {
 			
 			ihm.getFrame();
 		}catch(Exception e){
-			System.out.println("Chloe2012 is already open !!!");
+			System.out.println("Chloe is already open !!!");
 		}
 		finally{
 			launch.dispose();
@@ -159,7 +159,7 @@ public class Main {
 	private static void launchSearchAndReplace(Model model, Properties properties) {
 		//System.out.println("##chloe - appel de la fonction 'runSearchAndReplace()'");
 		try {
-			Set<String> asciis = importInputAscii(properties);
+			Set<String> asciis = importInputAsciiGrid(properties);
 			int nodatavalue = importNoDataValue(properties);
 			Map<Integer, Number> changes = importChanges(properties);
 			String folder = null;
@@ -180,7 +180,8 @@ public class Main {
 	private static void launchOverlay(Model model, Properties properties) {
 		//System.out.println("##chloe - appel de la fonction 'runOverlay()'");
 		try {
-			List<Matrix> matrix = importOverlayingMatrix(model, properties);
+			//List<Matrix> matrix = importOverlayingMatrix(model, properties);
+			List<String> asciis = importOverlayingAsciis(model, properties);
 			String folder = null;
 			String outputAsc = null;
 			if(properties.containsKey("output_folder")){
@@ -190,7 +191,7 @@ public class Main {
 			}
 			boolean viewAscii = importVisualizeAscii2(properties);
 			
-			model.runOverlay(true, matrix, folder, outputAsc, viewAscii);
+			model.runOverlay(true, asciis, folder, outputAsc, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
@@ -223,7 +224,8 @@ public class Main {
 	private static void launchClassification(Model model, Properties properties) {
 		//System.out.println("##chloe - appel de la fonction 'runClassification()'");
 		try {
-			Set<Matrix> matrix = importInputMatrix(model, properties);
+			Set<String> asciis = importInputAsciiGrid(properties);
+			//Set<Matrix> matrix = importInputMatrix(model, properties);
 			Map<Domain<Double, Double>, Integer> domains = importDomains(properties);
 			String folder = null;
 			String outputAsc = null;
@@ -234,7 +236,7 @@ public class Main {
 			}
 			boolean viewAscii = importVisualizeAscii(properties);
 			
-			model.runClassification(true, matrix, domains, folder, outputAsc, viewAscii);
+			model.runClassification(true, asciis, domains, folder, outputAsc, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
@@ -269,7 +271,8 @@ public class Main {
 	private static void launchCombine(Model model, Properties properties) {
 		//System.out.println("##chloe - appel de la fonction 'runCombine()'");
 		try {
-			List<Matrix> matrix = importFactorsMatrix(model, properties);
+			//List<Matrix> matrix = importFactorsMatrix(model, properties);
+			List<String> asciis = importFactorsAsciis(model, properties);
 			List<String> names = importFactorsNames(model, properties);
 			String combination = importCombination(model, properties);
 			
@@ -282,7 +285,7 @@ public class Main {
 			}
 			boolean viewAscii = importVisualizeAscii3(properties);
 			
-			model.runCombine(matrix, names, combination, folder, outputAsc, viewAscii);
+			model.runCombine(true, asciis, names, combination, folder, outputAsc, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
@@ -676,7 +679,7 @@ public class Main {
 	}
 	
 	// required
-	public static Set<String> importInputAscii(Properties properties) throws NoParameterException {
+	public static Set<String> importInputAsciiGrid(Properties properties) throws NoParameterException {
 		if(properties.containsKey("input_ascii")){
 			String prop = properties.getProperty("input_ascii");
 			File f = new File(prop);
@@ -715,6 +718,7 @@ public class Main {
 		throw new NoParameterException("input_ascii");
 	}
 	
+	/*
 	// required 
 	public static List<Matrix> importFactorsMatrix(Model model, Properties properties) throws NoParameterException {
 		if(properties.containsKey("factors")){
@@ -727,6 +731,24 @@ public class Main {
 				model.importAsciiGrid(matrix, dd[0], false);
 			}
 			return matrix;
+		}
+		throw new NoParameterException("factors");
+	}
+	*/
+	
+	// required 
+	public static List<String> importFactorsAsciis(Model model, Properties properties) throws NoParameterException {
+		if(properties.containsKey("factors")){
+			String prop = properties.getProperty("factors").replace("{", "").replace("}", "");
+			String[] ds = prop.split(";");
+			List<String> asciis = new ArrayList<String>();
+			for(String d : ds){
+				d = d.replace("(", "").replace(")", "");
+				String[] dd = d.split(",");
+				//model.importAsciiGrid(matrix, dd[0], false);
+				asciis.add(dd[0]);
+			}
+			return asciis;
 		}
 		throw new NoParameterException("factors");
 	}
@@ -773,6 +795,7 @@ public class Main {
 		throw new NoParameterException("changes");
 	}
 	
+	/*
 	// required 
 	public static List<Matrix> importOverlayingMatrix(Model model, Properties properties) throws NoParameterException {
 		if(properties.containsKey("overlaying_matrix")){
@@ -784,6 +807,23 @@ public class Main {
 				model.importAsciiGrid(inputMatrix, m, false);
 			}
 			return inputMatrix;
+		}
+		throw new NoParameterException("overlaying_matrix");
+	}
+	*/
+	
+	// required 
+	public static List<String> importOverlayingAsciis(Model model, Properties properties) throws NoParameterException {
+		if(properties.containsKey("overlaying_matrix")){
+			String prop = properties.getProperty("overlaying_matrix");
+			prop = prop.replace("{", "").replace("}", "").replace(" ", "");
+			String[] ms = prop.split(";");
+			List<String> asciis = new ArrayList<String>();
+			for(String m : ms){
+				//model.importAsciiGrid(inputMatrix, m, false);
+				asciis.add(m);
+			}
+			return asciis;
 		}
 		throw new NoParameterException("overlaying_matrix");
 	}

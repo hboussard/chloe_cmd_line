@@ -129,7 +129,8 @@ public class OverlayPanel extends TreatmentPanel {
 
 	@Override
 	public void run() {
-		getController().runOverlay(inputMatrix2, taOutputFolder2.getText(), viewAsciiOutput2.isSelected());
+		//getController().runOverlay(inputMatrix2, taOutputFolder2.getText(), viewAsciiOutput2.isSelected());
+		getController().runOverlay(inputAsciiGrids2, taOutputFolder2.getText(), viewAsciiOutput2.isSelected());
 	}
 
 }
