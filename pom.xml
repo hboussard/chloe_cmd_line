@@ -80,7 +80,7 @@
 			<version>1.0.19</version> 
 			<scope>compile</scope>			 
 		</dependency>
-		<!-- 
+		 <!-- 
 		<dependency> 
 			<groupId>fr.inra.sad.bagap</groupId> 
 			<artifactId>apiland</artifactId> 

@@ -1,18 +1,18 @@
 # ImageJ 1.37k Preferences
-# Thu Nov 12 10:07:41 CET 2020
+# Thu Nov 18 15:12:04 CET 2021
 
 fps=7.0
 new.type=0
-dir.image=C:\\Hugues\\data\\ascii\\qualitative_complete\\td\\tile\\
+dir.image=C:\\Hugues\\data\\ascii\\qualitative_complete\\erp\\
 new.width=400
 fcolor=#000000
 gel.options=2
 div-by-zero=Infinity
 pp.options=1
 raw.type=0
-ij.y=3
+ij.y=20
 roicolor=#FFFF00
-ij.x=679
+ij.x=511
 noise.sd=25.0
 prefs.options=0
 new.slices=1

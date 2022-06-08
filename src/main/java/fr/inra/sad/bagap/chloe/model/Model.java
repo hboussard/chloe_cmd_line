@@ -31,21 +31,22 @@ import com.csvreader.CsvWriter.FinalizedException;
 import fr.inra.sad.bagap.apiland.analysis.Analysis;
 import fr.inra.sad.bagap.apiland.analysis.AnalysisObserver;
 import fr.inra.sad.bagap.apiland.analysis.AnalysisState;
-import fr.inra.sad.bagap.apiland.analysis.matrix.ChamferDistance;
-import fr.inra.sad.bagap.apiland.analysis.matrix.HugeChamferDistance;
+import fr.inra.sad.bagap.apiland.analysis.ascii.ClassificationPixel2PixelAsciiGridCalculation;
+import fr.inra.sad.bagap.apiland.analysis.ascii.OverlayPixel2PixelAsciiGridCalculation;
+import fr.inra.sad.bagap.apiland.analysis.ascii.Pixel2PixelAsciiGridCalculation;
+import fr.inra.sad.bagap.apiland.analysis.combination.CombinationExpressionFactory;
+import fr.inra.sad.bagap.apiland.analysis.matrix.ChamferDistanceCalculation;
+import fr.inra.sad.bagap.apiland.analysis.matrix.HugeChamferDistanceAnalysis;
 import fr.inra.sad.bagap.apiland.analysis.matrix.RCMDistanceCalculation;
 //import fr.inra.sad.bagap.apiland.analysis.matrix.RCMDistanceUsingPenteInverseCalculation;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringOutput;
+import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringQueen;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.ClusteringRook;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.GroupDistanceAnalysis;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.NewClusteringQueenAnalysis;
 import fr.inra.sad.bagap.apiland.analysis.matrix.cluster.NewClusteringRookAnalysis;
 import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.Classification;
 import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.Pixel2PixelMatrixCalculation;
-import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.ascii.ClassificationPixel2PixelAsciiGridCalculation;
-import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.ascii.OverlayPixel2PixelAsciiGridCalculation;
-import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.ascii.Pixel2PixelAsciiGridCalculation;
-import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.combination.CombinationExpressionFactory;
 import fr.inra.sad.bagap.apiland.analysis.matrix.util.AsciiGridManager;
 import fr.inra.sad.bagap.apiland.analysis.matrix.util.ExportAsciiGridFromShapefileAnalysis;
 import fr.inra.sad.bagap.apiland.analysis.matrix.util.SpatialCsvManager;
@@ -711,7 +712,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 		return s;	
 	}
 	
-	public boolean runSearchAndReplace(boolean batch, Set<String> asciis, int noData, Map<Integer, Number> changes, String outputFolder, String outputAsc, boolean viewAscii) {
+	public boolean runSearchAndReplace(boolean batch, Set<String> asciis, int noData, Map<String, String> changes, String outputFolder, String outputAsc, boolean viewAscii) {
 		this.batch = batch;
 		try{
 			
@@ -831,55 +832,24 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				switch(typeDistance){
 				case "euclidian" : 
 					
-					ChamferDistance cd = new ChamferDistance(m, values, distance);
+					ChamferDistanceCalculation cd = new ChamferDistanceCalculation(m, values, distance);
 					cd.addObserver(this);
 					mDistance = cd.allRun();
 					
 					/*
-					String tt;
-					String[] ttt;
-					
-					tt = "1116.0 1075.0 1039.0 1005.0 975.0 949.0 925.0 906.0 894.0 889.0 884.0 889.0 894.0 906.0 925.0 949.0 975.0 1005.0 1039.0 1075.0 1038.0 972.0 906.0 840.0 775.0 710.0 645.0 582.0 519.0 456.0 397.0 340.0 288.0 245.0 215.0 204.0 204.0 215.0 245.0 272.0 280.0 304.0 340.0 288.0 245.0 215.0 204.0 204.0 204.0 215.0 245.0 288.0 340.0 397.0 456.0 519.0 582.0 645.0 710.0 775.0 840.0 906.0 972.0 1038.0 1105.0 1172.0 1239.0 1307.0 1375.0 1443.0 1511.0 1579.0 1647.0 1715.0 1783.0 1851.0 1919.0 1987.0 2055.0 2123.0 2191.0 2259.0 2327.0 2304.0 2260.0 2208.0 2164.0 2120.0 2076.0 2032.0 1988.0 1945.0 1905.0 1867.0 1833.0 1799.0 1765.0 1735.0 1709.0 1683.0";
-					ttt = tt.split(" ");
-					System.out.println("1ere ligne "+ttt.length);
-					
-					tt = "549.0 544.0 544.0 544.0 544.0 519.0 495.0 481.0 476.0 476.0 481.0 495.0 519.0 544.0 544.0 544.0 549.0 560.0 582.0 608.0 612.0 612.0 617.0 626.0 645.0 671.0 701.0 735.0 776.0 820.0 864.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 884.0 889.0 894.0 906.0 925.0 949.0 925.0 872.0 820.0 768.0 724.0 672.0 628.0 585.0 549.0 519.0 495.0 481.0 476.0 476.0 481.0 490.0 456.0 430.0 413.0 408.0 408.0 408.0 408.0 408.0 408.0 408.0 408.0 408.0 413.0 430.0 456.0 490.0 532.0 576.0 628.0 671.0 645.0 626.0 617.0 612.0 612.0 608.0 549.0 490.0 436.0 384.0 340.0 304.0 280.0 272.0";
-					
-					ttt = tt.split(" ");
-					System.out.println("2eme ligne "+ttt.length);
-				*/
-					/*
-					HugeChamferDistance hcd = new HugeChamferDistance(m.getFile(), values, (float) distance);
+					HugeChamferDistanceAnalysis hcd = new HugeChamferDistanceAnalysis(m.getFile(), values, (float) distance);
 					hcd.addObserver(this);
 					cDistance = (GridCoverage2D) hcd.allRun();
 					*/
 					//float[] fDistance = (float[]) hcd.allRun();
+					
 					/*
-					
-					GridCoverage2D gc = CoverageManager.get(m.getFile());
-					CoverageManager.exportAsciiGrid(gc, outputFolder+"/"+name+"_test1-"+values+".asc");
-					
-					
-					float[] fd = CoverageManager.getData(gc, 0, 0, 144, 138);
-					GridCoverage2D gc2 = CoverageManager.getCoverageFromData(fd, 144, 138);
-					CoverageManager.exportAsciiGrid(gc2, outputFolder+"/"+name+"_test2-"+values+".asc");
-					*/
-					/*
-					 * 
 					System.out.println((NoDataContainer) gc.getProperty("GC_NODATA"));
 					NoDataContainer ndc = (NoDataContainer) gc.getProperty("GC_NODATA");
 					System.out.println("nodata_value est "+ndc.getAsSingleValue());
 					NoDataContainer ndc = (NoDataContainer) gc.getProperty("GC_NODATA");
 					CoverageUtilities.setNoDataProperty(null, Raster.getNoDataValue());
 					System.out.println(ndc.getAsSingleValue());
-					*/
-					
-					
-					/*
-					
-					
-					GridCoverage2D gc3 = CoverageManager.getCoverageFromData(fDistance, 144, 138);
-					CoverageManager.exportAsciiGrid(gc3, outputFolder+"/"+name+"_test3-"+values+".asc");
 					*/
 					
 					break;
@@ -983,7 +953,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 								return matrix(0).get(p);
 							}
 						}
-						return 0;
+						return Raster.getNoDataValue();
 					}
 				};
 				pp.addObserver(this);
@@ -1235,7 +1205,7 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 	
 	public boolean runCluster(boolean batch, Set<Matrix> matrix, List<Integer> values, String typeCluster, double distance, 
 			double minimumTotalArea, Friction friction, Matrix frictionMatrix, 
-			/*boolean sameType, boolean sameMap,*/ String outputFolder, String outputAscii, boolean viewAsciiOutput){
+			/*boolean sameType, boolean sameMap,*/ String outputFolder, String outputAscii, String outputCsv, boolean viewAsciiOutput){
 		this.batch = batch;
 		try {
 			
@@ -1255,6 +1225,8 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 					minimumAreas.add(0.0);
 				}
 				//double minimumTotal = 0.0;
+				
+				String outCsv = "";
 				
 				switch(typeCluster){
 				/*
@@ -1379,7 +1351,13 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 					ca.addObserver(this);
 					Matrix mCluster = (Matrix) ca.allRun();
 					
-					ClusteringOutput co = new ClusteringOutput(values, minimumAreas, minimumTotalArea, outputFolder+"/cluster_"+mName+"_rook.csv", mCluster, m);
+					if(outputCsv == null){
+						outCsv = outputFolder+"/cluster_"+mName+"_rook.csv";
+					}else{
+						outCsv = outputCsv;
+					}
+					
+					ClusteringOutput co = new ClusteringOutput(values, minimumAreas, minimumTotalArea, outCsv, mCluster, m);
 					co.addObserver(this);
 					mCluster = (Matrix) co.allRun();
 					
@@ -1420,11 +1398,17 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 					
 				case "queen" :
 					
-					ca = new ClusteringRook(m, values);
+					ca = new ClusteringQueen(m, values);
 					ca.addObserver(this);
 					mCluster = (Matrix) ca.allRun();
 					
-					co = new ClusteringOutput(values, minimumAreas, minimumTotalArea, outputFolder+"/cluster_"+mName+"_queen.csv", mCluster, m);
+					if(outputCsv == null){
+						outCsv = outputFolder+"/cluster_"+mName+"_queen.csv";
+					}else{
+						outCsv = outputCsv;
+					}
+					
+					co = new ClusteringOutput(values, minimumAreas, minimumTotalArea, outCsv, mCluster, m);
 					co.addObserver(this);
 					mCluster = (Matrix) co.allRun();
 					

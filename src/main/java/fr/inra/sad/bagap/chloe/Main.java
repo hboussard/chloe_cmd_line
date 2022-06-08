@@ -161,7 +161,7 @@ public class Main {
 		try {
 			Set<String> asciis = importInputAsciiGrid(properties);
 			int nodatavalue = importNoDataValue(properties);
-			Map<Integer, Number> changes = importChanges(properties);
+			Map<String, String> changes = importChanges(properties);
 			String folder = null;
 			String outputAsc = null;
 			if(properties.containsKey("output_folder")){
@@ -254,15 +254,17 @@ public class Main {
 			
 			String folder = null;
 			String outputAsc = null;
+			String outputCsv = null;
 			if(properties.containsKey("output_folder")){
 				folder = importOutputFolder(properties);
 			}else{
 				outputAsc = importOutputAscii(properties);
+				outputCsv = importOutputCsv(properties);
 			}
 			boolean viewAscii = importVisualizeAscii(properties);
 			double minimumTotalArea = importMinimumTotalArea(properties);
 			
-			model.runCluster(true, matrix, clusters, typeCluster, distance, minimumTotalArea, friction, frictionMatrix, folder, outputAsc, viewAscii);
+			model.runCluster(true, matrix, clusters, typeCluster, distance, minimumTotalArea, friction, frictionMatrix, folder, outputAsc, outputCsv, viewAscii);
 		} catch (NoParameterException e) {
 			e.printStackTrace();
 		}
@@ -779,16 +781,16 @@ public class Main {
 	}
 	
 	// required 
-	public static Map<Integer, Number> importChanges(Properties properties) throws NoParameterException {
+	public static Map<String, String> importChanges(Properties properties) throws NoParameterException {
 		if(properties.containsKey("changes")){
 			String prop = properties.getProperty("changes").replace("{", "").replace("}", "");
 			String[] cc = prop.split(";");
 			String[] vv;
-			Map<Integer, Number> changes = new HashMap<Integer, Number>();
+			Map<String, String> changes = new HashMap<String, String>();
 			for(String c : cc){
 				c = c.replace("(", "").replace(")", "");
 				vv = c.split(",");
-				changes.put(Integer.parseInt(vv[0]), Double.parseDouble(vv[1]));
+				changes.put(vv[0]+"", vv[1]+"");
 			}
 			return changes;
 		}

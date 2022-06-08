@@ -393,7 +393,7 @@ public class Controller {
 		}
 	}
 	
-	public void runSearchAndReplace(final Set<String> asciis, final int noData, final Map<Integer, Number> changes, 
+	public void runSearchAndReplace(final Set<String> asciis, final int noData, final Map<String, String> changes, 
 			final String asciiOutput, final boolean viewAsciiOutput) {
 		
 		TreatmentWorker swingworker = new TreatmentWorker(ihm) {
@@ -675,7 +675,7 @@ public class Controller {
 			@Override
 			protected Boolean doInBackground() throws Exception {
 				ihm.start();
-				return model.runCluster(false, matrix, values, typeCluster, distance, minimumTotalArea, friction, frictionMatrix, outputFolder, null, viewAsciiOutput);
+				return model.runCluster(false, matrix, values, typeCluster, distance, minimumTotalArea, friction, frictionMatrix, outputFolder, null, null, viewAsciiOutput);
 			}
 			@Override
 			protected void done() {

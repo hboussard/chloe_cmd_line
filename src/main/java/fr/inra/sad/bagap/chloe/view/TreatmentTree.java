@@ -105,12 +105,13 @@ public class TreatmentTree extends JTree{
 		node = new DefaultMutableTreeNode("util");
 		node.add(new DefaultMutableTreeNode(new SearchAndReplacePanel(wizard)));
 		node.add(new DefaultMutableTreeNode(new OverlayPanel(wizard)));
-		node.add(new DefaultMutableTreeNode(new DistancePanel(wizard)));
 		node.add(new DefaultMutableTreeNode(new ClassificationPanel(wizard)));
-		node.add(new DefaultMutableTreeNode(new ClusterPanel(wizard)));
-		//node.add(new DefaultMutableTreeNode(new GroupPanel(wizard)));
 		node.add(new DefaultMutableTreeNode(new CombinePanel(wizard)));
 		node.add(new DefaultMutableTreeNode(new FilterPanel(wizard)));
+		root.add(node);
+		node = new DefaultMutableTreeNode("connectivity");
+		node.add(new DefaultMutableTreeNode(new DistancePanel(wizard)));
+		node.add(new DefaultMutableTreeNode(new ClusterPanel(wizard)));
 		root.add(node);
 		node = new DefaultMutableTreeNode("landscape metrics");
 		node.add(new DefaultMutableTreeNode(new MapWindowPanel(wizard)));
@@ -118,17 +119,6 @@ public class TreatmentTree extends JTree{
 		node.add(new DefaultMutableTreeNode(new SlidingWindowPanel(wizard)));
 		node.add(new DefaultMutableTreeNode(new SelectedWindowPanel(wizard)));
 		root.add(node);
-		/*
-		node = new DefaultMutableTreeNode("multi-spatial window");
-		node.add(new DefaultMutableTreeNode(new MultiSpatialSlidingWindowPanel(wizard)));
-		node.add(new DefaultMutableTreeNode(new MultiSpatialSelectedWindowPanel(wizard)));
-		root.add(node);
-		node = new DefaultMutableTreeNode("spatio-temporal window");
-		node.add(new DefaultMutableTreeNode(new TemporalSlidingWindowPanel(wizard)));
-		node.add(new DefaultMutableTreeNode(new TemporalSelectedWindowPanel(wizard)));
-		node.add(new DefaultMutableTreeNode(new TemporalGridWindowPanel(wizard)));
-		root.add(node);
-		*/
 	}
 
 }

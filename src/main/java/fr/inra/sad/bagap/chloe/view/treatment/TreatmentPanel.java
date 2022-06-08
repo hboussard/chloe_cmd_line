@@ -97,7 +97,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 	
 	protected static List<Integer> windowSizes, gridSizes;
 	
-	protected static Map<Integer, Number> values;
+	protected static Map<String, String> values;
 	
 	protected static Set<Integer> filters, unfilters, vDistances, vFilters;
 	
@@ -784,7 +784,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 		rbFormula.setFont(fl);
 		rbFormula.setEnabled(false);
 		
-		taFormula = new JTextArea();
+		taFormula = new JTextArea("exp(-pow(distance, 2)/pow(dmax/2, 2))");
 		taFormula.setFont(new Font("TimesRoman", Font.BOLD, 16));
 		
 		ButtonGroup bgWeighted = new ButtonGroup();
@@ -3365,6 +3365,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 			}
 		});
 		
+		tChanges.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(new JTextField()));
 		tChanges.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(new JTextField()));	
 		tChanges.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(new JCheckBox()));
 		tChanges.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer(){

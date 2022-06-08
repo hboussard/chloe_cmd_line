@@ -14,7 +14,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
 
-import fr.inra.sad.bagap.apiland.analysis.matrix.pixel.combination.CombinationExpressionFactory;
+import fr.inra.sad.bagap.apiland.analysis.combination.CombinationExpressionFactory;
 import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.distance.DistanceFunction;
 
 public class LineChartWeightedDistance extends ApplicationFrame {

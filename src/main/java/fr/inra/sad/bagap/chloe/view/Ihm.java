@@ -22,7 +22,7 @@ public class Ihm {
 
 	private String version = "4.1";
 	
-	private String beta = "beta3";
+	private String beta = "beta7";
 	
 	private Controller controller;
 	

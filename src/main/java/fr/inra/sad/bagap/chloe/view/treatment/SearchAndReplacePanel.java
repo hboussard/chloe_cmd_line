@@ -135,16 +135,16 @@ public class SearchAndReplacePanel extends TreatmentPanel {
 			inputAsciiGrids.add(m.getFile());
 		}
 		
-		values = new HashMap<Integer, Number>();
+		values = new HashMap<String, String>();
 		if(oldNoData != (Integer) spNoData.getValue()){
-			values.put(oldNoData, (Integer) spNoData.getValue());
+			values.put(new Integer((int) oldNoData).toString(), new Integer((int) spNoData.getValue()).toString());
 		}
 		if(tChanges != null){
 			tChanges.getColumnModel().getColumn(2).getCellEditor().stopCellEditing();
 			for(int i=0; i<tChanges.getModel().getRowCount(); i++){
 				if((Boolean)tChanges.getModel().getValueAt(i, 1)){
-					values.put((Integer) tChanges.getModel().getValueAt(i, 0), 
-							Double.parseDouble((String) tChanges.getModel().getValueAt(i, 2)));
+					values.put(((Integer)tChanges.getModel().getValueAt(i, 0)).toString(), 
+							(String) tChanges.getModel().getValueAt(i, 2));
 				}
 			}
 		}
