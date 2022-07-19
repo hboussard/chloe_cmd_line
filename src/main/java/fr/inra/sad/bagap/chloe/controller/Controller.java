@@ -10,9 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
-import com.csvreader.CsvReader;
-import com.csvreader.CsvReader.CatastrophicException;
-import com.csvreader.CsvReader.FinalizedException;
+import org.jumpmind.symmetric.csv.CsvReader;
 
 import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.WindowShapeType;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Pixel;
@@ -361,11 +359,7 @@ public class Controller {
 			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
-		} catch (FinalizedException e1) {
-			e1.printStackTrace();
-		} catch (CatastrophicException e1) {
-			e1.printStackTrace();
-		}catch(Exception ex){
+		} catch(Exception ex){
 			ex.printStackTrace();
 		}
 	}
@@ -383,10 +377,6 @@ public class Controller {
 			cr.close();
 			panel.displayVMap();
 		} catch (IOException e1) {
-			e1.printStackTrace();
-		} catch (FinalizedException e1) {
-			e1.printStackTrace();
-		} catch (CatastrophicException e1) {
 			e1.printStackTrace();
 		}catch(Exception ex){
 			ex.printStackTrace();

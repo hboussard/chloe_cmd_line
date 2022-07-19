@@ -24,9 +24,8 @@ import org.geotools.data.shapefile.shp.ShapefileException;
 import org.geotools.data.shapefile.shp.ShapefileHeader;
 import org.geotools.data.shapefile.shp.ShapefileReader;
 
-import com.csvreader.CsvReader;
-import com.csvreader.CsvWriter;
-import com.csvreader.CsvWriter.FinalizedException;
+import org.jumpmind.symmetric.csv.CsvReader;
+import org.jumpmind.symmetric.csv.CsvWriter;
 
 import fr.inra.sad.bagap.apiland.analysis.Analysis;
 import fr.inra.sad.bagap.apiland.analysis.AnalysisObserver;
@@ -467,8 +466,6 @@ public class Model implements TreatmentObserver, AnalysisObserver {
 				}
 				
 				cw.close();
-			} catch (FinalizedException e) {
-				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			} 	

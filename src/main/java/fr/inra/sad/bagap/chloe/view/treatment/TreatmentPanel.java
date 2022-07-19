@@ -54,9 +54,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import com.csvreader.CsvReader;
-import com.csvreader.CsvReader.CatastrophicException;
-import com.csvreader.CsvReader.FinalizedException;
+import org.jumpmind.symmetric.csv.CsvReader;
 import fr.inra.sad.bagap.apiland.analysis.matrix.process.metric.MatrixMetricManager;
 import fr.inra.sad.bagap.apiland.analysis.matrix.window.shape.WindowShapeType;
 import fr.inra.sad.bagap.apiland.core.space.impl.raster.Pixel;
@@ -2608,7 +2606,7 @@ public abstract class TreatmentPanel extends WizardPanel {
 						}
 					}
 					
-				} catch (IOException | FinalizedException | CatastrophicException e1) {
+				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
 			}
